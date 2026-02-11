@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<!-- 
+Root XIOS configuration file for a ARPEGE CY49T1 run
+First version - 11/2016 - Stephane Senesi
+Adaptation to CY49T1 - 07/2024 - Gildas Dayon
+Modification for XIOS3 - 03/2024 - Gildas Dayon (thx to Blanka Balogh)
+Stabilisation with a master server - 06/25 - Gildas Dayon (thx to Julien Derouillat)
+Ref: 
+  - for XIOS : https://forge.ipsl.jussieu.fr/ioserver/wiki 
+  - for XIAS (implementation in Surfex and Arpege) : http://www.cnrm-game-meteo.fr/cm/spip.php?article60
+-->
+<simulation>
+
+  <!-- All stuff below is usually kept unchanged, and/or managed by ECLIS -->
+
+  <!-- Eclis will/has discard useless 'context' entries below -->
+  <context id="surfex" src="./arpsfx.xml" />
+  <context id="surfex" src="./arpsfx_files.xml" />
+
+  <context id="xios">
+    <variable_definition>
+
+      <pool_definition>
+        <pool name="super_mgr" nprocs="1"></pool>
+      </pool_definition>    
+
+      <variable_group id="buffer">
+        <variable id="optimal_buffer_size" type="string">performance</variable>
+        <variable id="buffer_size_factor" type="double">2.0</variable>
+        <variable id="transport_protocol" type="string">p2p</variable>
+        <variable id="services_use_window_manager" type="bool">false</variable>	  
+      </variable_group>
+
+      <variable_group id="parameters" >
+	<variable id="print_file"    type="bool">@PRINTFILE</variable>
+        <variable id="info_level"    type="int">@INFOLEVEL</variable>
+        <variable id="ratio_server2" type="int">50</variable>
+        <variable id="using_server2" type="bool">true</variable>
+      </variable_group>
+      
+      <variable_group id="coupling">
+        <variable id="using_server" type="bool">true</variable>
+        <variable id="using_oasis" type="bool">false</variable>
+      </variable_group>
+
+    </variable_definition>
+  </context>
+
+</simulation>
+
