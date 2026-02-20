@@ -4,6 +4,8 @@
 #SBATCH --mem=247000
 #SBATCH --ntasks 1
 #SBATCH --time=02:00:00
+#SBATCH -J pgd-prep_climat
+#SBATCH -o pgd-prep_climat.o%j
 
 # Script for generation of PGD/PREP with SURFEX-v9 / ARPEGE-Climat v7.
 # sbatch <script-name> <grid> <lpgd> <ltrip>
@@ -65,7 +67,7 @@ LULUCCF=
 DIR=~/scripts/pgd_prep/cy49t1.03
 SAVEDIR=~/scripts/pgd_prep/cy49t1.03/cy49t1.03.${GRID}
 mkdir -p $SAVEDIR
-rm $SAVEDIR/*
+rm -f $SAVEDIR/*
 
 #=========================================================================
 #===== End of main configuration elements
