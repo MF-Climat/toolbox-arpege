@@ -1,0 +1,300 @@
+#!/bin/bash
+#SBATCH -p normal256
+#SBATCH -J c923_climat
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=128
+#SBATCH --time "20"
+#SBATCH --exclusive
+#SBATCH -o c923_climat.o%j
+
+# Script for generation of CLIM files for ARPEGE-Climat v7.
+# sbatch <script-name>
+# Tested for TL127
+
+# Load required modules and set environment variables
+set -x
+ulimit -s unlimited
+module purge
+module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
+export MKL_CBWR=AUTO,STRICT
+export OMP_STACKSIZE=4G
+export KMP_STACKSIZE=4G
+export KMP_MONITOR_STACKSIZE=1G
+export EC_MPI_ATEXIT=0
+export EC_PROFILE_HEAP=0
+export OMP_NUM_THREADS=128
+export DR_HOOK=0
+export DR_HOOK_IGNORE_SIGNALS=-1
+export DR_HOOK_SILENT=1
+export DR_HOOK_OPT=prof
+export MPL_MBX_SIZE=2048000000
+export KMP_AFFINITY="verbose,compact,granularity=fine"
+export KMP_BLOCKTIME=12
+export OMP_WAIT_POLICY=ACTIVE
+export EC_MEMINFO=0
+set +x
+
+
+#=========================================================================
+#===== Configuration
+#=========================================================================
+#=== Binaries
+PACK=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y
+EXEARP=$PACK/bin/MASTERODB
+
+#=== Geometry and version
+GRID=tl127
+NDATX=360 # What for ?
+NDATY=180 # What for ?
+
+#=== Namelists
+NAMDIR=~dayong/toolbox-arpege/namelist
+NAMSFX=$NAMDIR/sfx/nam.sfx.${GRID}r.c923.cy49t1_clim1.03
+NAMLIN=$NAMDIR/atm/nam.atm.${GRID}l91r.c923.cy49t1_clim1.03.lin
+NAMQUAD=$NAMDIR/atm/nam.atm.${GRID}l91r.c923.cy49t1_clim1.03.quad
+
+#=== SAVE directory and experiment name
+CNMEXPL=c923_${GRID}
+SAVEDIR=/scratch/work/${USER}/c923/${CNMEXPL}
+mkdir -p $SAVEDIR
+rm -f $SAVEDIR/*
+
+#=========================================================================
+#===== End of main configuration elements
+#=========================================================================
+
+#=== Define constants and paths
+# Path
+FILE_PATH_DBASE=/scratch/work/climat/daac-dev/data/923N
+FILE_PATH_DBASE1=${FILE_PATH_DBASE}/RELIEF_G/GTOPT030
+FILE_PATH_DBASE2=${FILE_PATH_DBASE}/SURFACE_G/version2/i3e
+FILE_PATH_DBASE3=${FILE_PATH_DBASE}/N108/i3e
+FILE_PATH_DBASE5=${FILE_PATH_DBASE}/SURFACE_L/EUROPEb_v1/i3e
+FILE_PATH_DBASE6=${FILE_PATH_DBASE}/CLIM_G/version2/i3e
+FILE_PATH_DBASE8=${FILE_PATH_DBASE}/CLIM_G/ozone/ascii
+FILE_PATH_DBASE9=${FILE_PATH_DBASE}/CLIM_G/aerosols/ascii
+
+TEMPORAIRE=$TMPDIR
+
+# Machine-depending namelist variables
+LOPT_SCALAR=.TRUE.
+MBX_SIZE=1024000000
+NCOMBFLEN=1800000
+MP_TYPE=2
+
+
+#=========================================================================
+#===== Preparation of execution
+#=========================================================================
+
+cd $TEMPORAIRE
+
+#=== Copying and transforming Namelists
+cp $NAMSFX EXSEG1.nam
+cp $NAMLIN ${CNMEXPL}_lin.nam
+cp $NAMQUAD ${CNMEXPL}_quad.nam
+
+# Transform the namelist files by replacing placeholders with actual values
+sed \
+ -e "s/__MBX_SIZE__/$MBX_SIZE/" \
+ -e "s/__NTASKS__/1/" \
+${CNMEXPL}_lin.nam > namprovi
+
+sed \
+ -e "s/__MBX_SIZE__/$MBX_SIZE/" \
+ -e "s/__NTASKS__/1/" \
+${CNMEXPL}_quad.nam > namprovi_quad
+
+#=== Creating all the namelist files for the different parts
+sed "s/ N923=0/ N923=1/" namprovi > namprovi_1_lin
+sed "s/ N923=0/ N923=1/" namprovi_quad > namprovi_1_quad
+sed "s/ N923=0/ N923=2/" namprovi > namprovi_2
+sed "s/ N923=0/ N923=3/" namprovi > namprovi_3
+sed "s/ N923=0/ N923=4/" namprovi > namprovi_4
+sed "s/ N923=0/ N923=5/" namprovi > namprovi_5
+sed \
+ -e "s/ N923=0/ N923=6/" \
+ -e "/&NAMCLI/a\   NDATX=$NDATX,\n   NDATY=$NDATY,\n   RSTR=0.," \
+namprovi > namprovi_6
+sed "s/ N923=0/ N923=8/" namprovi > namprovi_8
+sed "s/ N923=0/ N923=9/" namprovi > namprovi_9
+
+rm namprovi namprovi_quad
+
+
+#=========================================================================
+#===== Execution of the different parts
+#=========================================================================
+
+#=== Part 1: Quadratic and Linear
+echo "Part 1: Quadratic and Linear"
+cp ${FILE_PATH_DBASE1}/* .
+gzip -d Dh_over_Dx_Dh_over_Dy.gz
+gzip -d Dh_over_Dx_square.gz
+gzip -d Dh_over_Dy_square.gz
+gzip -d Hmax-HxH-Hmin_ov4.gz
+gzip -d Nb_Peaks.gz
+gzip -d Oro_Max.gz
+gzip -d Oro_Mean.gz
+gzip -d Oro_Min.gz
+gzip -d Sigma.gz
+gzip -d Urbanisation.gz
+gzip -d Water_Percentage.gz
+
+ln -s namprovi_1_quad fort.4
+ln -s $EXEARP arpege.exe
+
+# mpirun ./arpege.exe
+./arpege.exe
+
+mv Const.Clim Neworog
+rm fort.4
+
+ln -s namprovi_1_lin fort.4
+# mpirun ./arpege.exe
+./arpege.exe
+codrep=$?
+if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 1'; exit
+
+# Do some cleanup
+rm fort.4 Neworog
+rm doc* Water_Percentage Oro_M* Sigma Nb_Peaks Urbanisation Dh_* Hmax-HxH-Hmin_ov4
+
+
+#=== Part 2
+echo "Part 2"
+cp ${FILE_PATH_DBASE2}/itp_GL   itp_GL
+cp ${FILE_PATH_DBASE2}/alb_GL   alb_GL
+cp ${FILE_PATH_DBASE2}/emi_GL   emi_GL
+cp ${FILE_PATH_DBASE2}/dps_GL   dps_GL
+cp ${FILE_PATH_DBASE2}/arg_GL   arg_GL
+cp ${FILE_PATH_DBASE2}/sab_GL   sab_GL
+cp ${FILE_PATH_DBASE2}/vgx_GL   vgx_GL
+cp ${FILE_PATH_DBASE2}/dpr_GL   dpr_GL
+
+ln -s namprovi_2 fort.4
+# mpirun ./arpege.exe
+./arpege.exe
+codrep=$?
+if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 2'; exit
+
+# Do some cleanup
+rm fort.4 *_GL
+
+
+#=== Part 3
+echo "Part 3"
+cp ${FILE_PATH_DBASE3}/N108_GL  N108_GL
+for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
+  cp  Const.Clim  Const.Clim.${MM}
+done
+
+ln -s namprovi_3 fort.4
+# mpirun ./arpege.exe
+./arpege.exe
+codrep=$?
+if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 3'; exit
+
+# Do some cleanup
+rm fort.4 N108_GL
+
+#=== Part 4 to 9
+cp ${FILE_PATH_DBASE2}/z0v_GL  z0v_GL
+cp ${FILE_PATH_DBASE2}/alv_GL  alv_GL
+cp ${FILE_PATH_DBASE2}/rsm_GL  rsm_GL
+
+cp ${FILE_PATH_DBASE5}/msk_HR  msk_HR
+cp ${FILE_PATH_DBASE5}/itp_HR  itp_HR
+cp ${FILE_PATH_DBASE5}/dpr_HR  dpr_HR
+cp ${FILE_PATH_DBASE5}/rsm_HR  rsm_HR
+cp ${FILE_PATH_DBASE5}/vgx_HR  vgx_HR
+cp ${FILE_PATH_DBASE5}/alv_HR  alv_HR
+cp ${FILE_PATH_DBASE5}/z0v_HR  z0v_HR
+
+cp ${FILE_PATH_DBASE6}/rel_GL.gz  rel_GL.gz
+gzip -d  rel_GL.gz
+
+for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
+
+    #=== Part 4
+    echo "Part 4"
+    mv  Const.Clim.${MM}  Const.Clim
+    cp ${FILE_PATH_DBASE2}/veg${MM}_GL  veg_GL
+    cp ${FILE_PATH_DBASE2}/lai${MM}_GL  lai_GL
+
+    ln -s namprovi_4 fort.4
+    # mpirun ./arpege.exe
+    ./arpege.exe
+    codrep=$?
+    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 4'; exit
+
+    # Do some cleanup
+    rm fort.4 veg_GL lai_GL
+
+    #=== Part 5
+    echo "Part 5"
+    cp ${FILE_PATH_DBASE5}/veg_${MM}_HR  veg_HR
+    cp ${FILE_PATH_DBASE5}/lai_${MM}_HR  lai_HR
+
+    ln -s namprovi_5 fort.4
+    # mpirun ./arpege.exe
+    ./arpege.exe
+    codrep=$?
+    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 5'; exit
+
+    # Do some cleanup
+    rm fort.4 veg_HR lai_HR
+
+    #=== Part 6
+    echo "Part 6"
+    cp ${FILE_PATH_DBASE6}/tpl_${MM}_GL.gz  tsl_GL.gz ; gzip -d  tsl_GL
+    cp ${FILE_PATH_DBASE6}/tpl_${MM}_GL.gz  tpl_GL.gz ; gzip -d  tpl_GL
+    cp ${FILE_PATH_DBASE6}/wpl_${MM}_GL.gz  wsl_GL.gz ; gzip -d  wsl_GL
+    cp ${FILE_PATH_DBASE6}/wpl_${MM}_GL.gz  wpl_GL.gz ; gzip -d  wpl_GL
+    cp ${FILE_PATH_DBASE6}/snl_${MM}_GL.gz  snl_GL.gz ; gzip -d  snl_GL
+
+    ln -s namprovi_6 fort.4
+    # mpirun ./arpege.exe
+    ./arpege.exe
+    codrep=$?
+    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 6'; exit
+
+    # Do some cleanup
+    rm fort.4 tsl_* tpl_* wsl_* wpl_* snl_*
+
+    #=== Part (--7-- nope) 8 : Ozone
+    echo "Part 8 : Ozone"
+    cp ${FILE_PATH_DBASE8}/abc_quadra_${MM} abc_coef
+
+    ln -s namprovi_8 fort.4
+    # mpirun ./arpege.exe
+    ./arpege.exe
+    codrep=$?
+    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 8'; exit
+
+    # Do some cleanup
+    rm fort.4 abc_coef
+
+    #=== Part 9 : Aerosols
+    echo "Part 9 : Aerosols"
+    cp ${FILE_PATH_DBASE9}/aero.tegen.m${MM}_GL aero_GL
+
+    ln -s namprovi_9 fort.4
+    # mpirun ./arpege.exe
+    ./arpege.exe
+    codrep=$?
+    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 9'; exit
+
+    # Do some cleanup
+    rm fort.4 aero_GL
+
+    #=== Move the output file to the save directory
+    mv Const.Clim "${SAVEDIR}/clim_arpege.tl127r.m${MM}" 
+
+done
+
+#=========================================================================
+#===== End of execution
+#=========================================================================
+
