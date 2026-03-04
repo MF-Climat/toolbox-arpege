@@ -1,0 +1,126 @@
+#!/bin/bash
+#SBATCH -p normal256
+#SBATCH -J c927_climat
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=16
+#SBATCH --cpus-per-task=8
+#SBATCH --time 00:10:00
+#SBATCH --exclusiv
+#SBATCH -o c927_climat.o%j
+
+# Script for generation of RESTART files for ARPEGE-Climat v7.
+# Interpolation of Analysis or Forecast files towards the target horizontal and vertical grid.
+# Configuration 927.
+# sbatch <script-name>
+# 03/2026 : Tested for TL49, TL127
+
+# Load required modules and set environment variables
+set -x
+ulimit -s unlimited
+module purge
+module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
+export MKL_CBWR=AUTO,STRICT
+export OMP_STACKSIZE=4G
+export KMP_STACKSIZE=4G
+export KMP_MONITOR_STACKSIZE=1G
+export EC_MPI_ATEXIT=0
+export EC_PROFILE_HEAP=0
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export DR_HOOK=0
+export DR_HOOK_IGNORE_SIGNALS=-1
+export DR_HOOK_SILENT=1
+export DR_HOOK_OPT=prof
+export MPL_MBX_SIZE=2048000000
+export KMP_AFFINITY="verbose,compact,granularity=fine"
+export KMP_BLOCKTIME=12
+export OMP_WAIT_POLICY=ACTIVE
+export EC_MEMINFO=0
+set +x
+
+#=========================================================================
+#===== Configuration
+#=========================================================================
+#=== Binaries
+PACK=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y
+EXEARP=$PACK/bin/MASTERODB
+
+#=== Geometry and version
+GRID=tl127
+VLEV=l91
+
+#=== Namelists
+NAMDIR=~/toolbox-arpege/namelist
+NAMSFX=$NAMDIR/sfx/nam.sfx.${GRID}r.c927.cy49t1_clim1.03
+NAMARP=$NAMDIR/atm/nam.atm.${GRID}${VLEV}r.c927.cy49t1_clim1.03
+
+#=== Restarts
+# Initial conditions and climatologies :
+SRCDIR=/scratch/climat/daac-dev/data/927N
+# Target climatologies - to build it, check c923 - :
+CLIMDIR=/scratch/climat/daac-dev/data/927N
+
+#=== SAVE directory and experiment name
+CNMEXPL=cy49t1_clim1.03_${GRID}${VLEV}r
+SAVEDIR=/scratch/work/${USER}/c927/${CNMEXPL}
+mkdir -p $SAVEDIR
+rm -f $SAVEDIR/*
+
+#=========================================================================
+#===== End of main configuration elements
+#=========================================================================
+
+#=== Define constants and paths
+# Path
+TEMPORAIRE=$TMPDIR
+
+# Machine-depending namelist variables
+LOPT_SCALAR=.TRUE.
+MBX_SIZE=1024000000
+NCOMBFLEN=1800000
+MP_TYPE=2
+
+
+#=========================================================================
+#===== Preparation of execution
+#=========================================================================
+
+cd $TEMPORAIRE
+
+#=== Copying and transforming Namelists
+cp $NAMSFX EXSEG1.nam
+cp $NAMARP namprovi
+
+# Transform the namelist files by replacing placeholders with actual values
+sed \
+ -e "s/__NCOMBFLEN__/$NCOMBFLEN/" \
+ -e "s/__MP_TYPE__/$MP_TYPE/" \
+ -e "s/__LOPT_SCALAR__/$LOPT_SCALAR/" \
+ -e "s/__MBX_SIZE__/$MBX_SIZE/" \
+ -e "s/__NTASKS__/$SLURM_NTASKS/" \
+namprovi > fort.4
+rm namprovi
+
+
+#=========================================================================
+#===== Execution of the interpolation
+#=========================================================================
+
+#=== Get the input files
+# Initial conditions:
+cp ${SRCDIR}/analyse.20161002r0 ICMSHARPEINIT
+
+# Departure climatologies:
+cp ${SRCDIR}/clim_arpege.tl1198.01.m10 Const.Clim
+
+# Arrival climatologies:
+cp ${CLIMDIR}/clim_arpege.${GRID}r.m10 const.clim.000
+
+#=== Get the binaries and run the model
+cp $EXEARP arpege.exe
+
+mpirun ./arpege.exe
+codrep=$?
+[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED'; exit 1; }
+
+#=== Move the output files to the save directory
+mv PFARPE000+0000 $SAVEDIR/${CNMEXPL}__PFARPE000+0000

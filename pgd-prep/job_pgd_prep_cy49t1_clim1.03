@@ -9,6 +9,7 @@
 
 # Script for generation of PGD/PREP with SURFEX-v9 / ARPEGE-Climat v7.
 # sbatch <script-name> <grid> <lpgd> <ltrip>
+# Tested for TL49, TL127
 # TRIP no tested.
 
 
@@ -46,26 +47,22 @@ EXEPREP=$PACK/PREP
 EXETRIP=$PACK/TRIP_PREP
 
 #=== Namelists
-NAMDIR=~dayong/namelist
-NAMELIST=$NAMDIR/sfx/nam.sfx.${GRID}.cy49t1.03.pgd
+NAMDIR=~/toolbox-arpege/namelist
+NAMELIST=$NAMDIR/sfx/nam.sfx.${GRID}r.pgd.cy49t1_clim1.03
 TRIPNAML=$NAMDIR/riv/TRIP_OPTIONS.nam # dummy for the moment
 
 #=== Restarts
-#RESDIR=/home/gmgec/mrgu/colin/bcond/v9_offline/pgd_prep_fa_from_cm6_sfxv82
-#FA_PGDFILE=$RESDIR/PGD_v80.fa
-#FA_INITFILE=$RESDIR/PREP_v80.fa
 RESDIR=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
 FA_PGDFILE=$RESDIR/PGD.AGCM.tl127r.cy49t1_clim1.03.fa
 FA_INITFILE=$RESDIR/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa
-
 
 #=== LULUC parameters - not used for the moment
 LUYEAR=1700
 LULUCCF=
 
 #=== SAVE directory
-DIR=~/scripts/pgd_prep/cy49t1.03
-SAVEDIR=~/scripts/pgd_prep/cy49t1.03/cy49t1.03.${GRID}
+CNMEXPL=cy49t1_clim1.03_${GRID}$r
+SAVEDIR=/scratch/work/${USER}/pgd-prep/${CNMEXPL}
 mkdir -p $SAVEDIR
 rm -f $SAVEDIR/*
 
@@ -81,13 +78,9 @@ ECOBINDIR=$ECODIR
 GRIB_INITFILE=$ECODIR/restart_grib/GRIDSURFARP.tl127l31r
 
 #=== Environement
-module purge
-module load intel/oneapi/2023.2
-module load compiler/2023.2.0
-module load mkl/2023.2.0
-module load mpi/2021.10.0
-module load gcc/14.1.0
 ulimit -s unlimited
+module purge
+module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
 
 export DR_HOOK=0
 export DR_HOOK_IGNORE_SIGNALS=-1
@@ -98,7 +91,6 @@ export MPL_MBX_SIZE=2048000000
 export EC_PROFILE_HEAP=0
 export EC_MPI_ATEXIT=0
 export OMP_NUM_THREADS=1
-ulimit -s unlimited
 
 # must have this to run PGD with CY49
 export DR_HOOK_ASSERT_MPI_INITIALIZED=0
@@ -109,14 +101,14 @@ export DR_HOOK_ASSERT_MPI_INITIALIZED=0
 
 #=== TRIP data
 if [[ $LTRIP -ne 0 ]] ; then
-   mkdir -p $DIR/data_trip
-   mkdir -p $DIR/data_oasis
+   mkdir -p $SAVEDIR/data_trip
+   mkdir -p $SAVEDIR/data_oasis
 fi
 
 #=== Run directory
 set -x
-mkdir -p $FTDIR/cy49t1.03.${GRID}  ##$EXPNAME
-cd $FTDIR/cy49t1.03.${GRID} ##$EXPNAME
+mkdir -p $FTDIR/cy49t1.03.${GRID}
+cd $FTDIR/cy49t1.03.${GRID}
 rm -f *
 
 #=== Copying Namelist
@@ -174,7 +166,7 @@ if [[ $LPGD -ne 0 ]] ; then
 
    #=== Error catching
    if [[ $? -ne 0 ]] ; then
-      echo "run pgd failed !!! See in directory: $FTDIR/$EXPNAME"
+      echo "run pgd failed !!! See in directory: $FTDIR/$CNMEXPL"
       cat LISTING_PGD.txt
       cat OPTIONS.nam
       exit
@@ -214,7 +206,6 @@ ln -s $FA_PGDFILE restart_sfx_pgd.fa
 ln -s $FA_INITFILE restart_sfx.fa
 
 ln -s $SAVEDIR/PGD.fa PGD.fa
-#ln -s $SAVEDIR/PGD.nc PGD.nc
 
 echo " copie et execution du prep "
 ln -s $EXEPREP prep.exe
@@ -227,21 +218,20 @@ fi
 
 #=== Error catching
 if [[ $? -ne 0 ]] ; then
-  echo "run prep failed !!! See in directory: $FTDIR/$EXPNAME"
+  echo "run prep failed !!! See in directory: $FTDIR/$CNMEXPL"
   #cat LISTING_PREP0.txt
   exit
 fi
 
 #=== Saving output
 mv PREP.fa  $SAVEDIR/.
-#mv PREP.nc  $SAVEDIR/.
 
 if [[ $LTRIP -ne 0 ]] ; then
    mv TRIP_PREP.nc $SAVEDIR/.
-   mv TRIP_PARAM.nc $DIR/data_trip/.
-   mv areas.nc $DIR/data_oasis/.
-   mv grids.nc $DIR/data_oasis/.
-   mv masks.nc $DIR/data_oasis/.
+   mv TRIP_PARAM.nc $SAVEDIR/data_trip/.
+   mv areas.nc $SAVEDIR/data_oasis/.
+   mv grids.nc $SAVEDIR/data_oasis/.
+   mv masks.nc $SAVEDIR/data_oasis/.
 fi
 
 if [[ $DR_HOOK -ne 0 ]] ; then

@@ -1,5 +1,5 @@
 &NAMDIM
-	NDGLG = 50		,
+  NDGLG = 50		,
 /
 &NAMGEM
   RLOCEN=0.000,

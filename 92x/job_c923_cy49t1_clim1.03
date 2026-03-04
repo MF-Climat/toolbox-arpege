@@ -4,13 +4,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=128
-#SBATCH --time "20"
+#SBATCH --time 00:20:00
 #SBATCH --exclusive
 #SBATCH -o c923_climat.o%j
 
 # Script for generation of CLIM files for ARPEGE-Climat v7.
+# Configuration 923.
 # sbatch <script-name>
-# Tested for TL127
+# Tested for TL49, TL127
 
 # Load required modules and set environment variables
 set -x
@@ -45,17 +46,17 @@ EXEARP=$PACK/bin/MASTERODB
 
 #=== Geometry and version
 GRID=tl127
-NDATX=360 # What for ?
-NDATY=180 # What for ?
+NDATX=360 # What for ? - might not be needed -
+NDATY=180 # What for ? - might not be needed -
 
 #=== Namelists
-NAMDIR=~dayong/toolbox-arpege/namelist
+NAMDIR=~/toolbox-arpege/namelist
 NAMSFX=$NAMDIR/sfx/nam.sfx.${GRID}r.c923.cy49t1_clim1.03
 NAMLIN=$NAMDIR/atm/nam.atm.${GRID}l91r.c923.cy49t1_clim1.03.lin
 NAMQUAD=$NAMDIR/atm/nam.atm.${GRID}l91r.c923.cy49t1_clim1.03.quad
 
 #=== SAVE directory and experiment name
-CNMEXPL=c923_${GRID}
+CNMEXPL=cy49t1_clim1.03_${GRID}
 SAVEDIR=/scratch/work/${USER}/c923/${CNMEXPL}
 mkdir -p $SAVEDIR
 rm -f $SAVEDIR/*
@@ -66,7 +67,7 @@ rm -f $SAVEDIR/*
 
 #=== Define constants and paths
 # Path
-FILE_PATH_DBASE=/scratch/work/climat/daac-dev/data/923N
+FILE_PATH_DBASE=/scratch/climat/daac-dev/data/923N
 FILE_PATH_DBASE1=${FILE_PATH_DBASE}/RELIEF_G/GTOPT030
 FILE_PATH_DBASE2=${FILE_PATH_DBASE}/SURFACE_G/version2/i3e
 FILE_PATH_DBASE3=${FILE_PATH_DBASE}/N108/i3e
@@ -145,17 +146,18 @@ gzip -d Water_Percentage.gz
 ln -s namprovi_1_quad fort.4
 ln -s $EXEARP arpege.exe
 
-# mpirun ./arpege.exe
 ./arpege.exe
+codrep=$?
+[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 1 - Linear '; exit 1; }
 
 mv Const.Clim Neworog
 rm fort.4
 
 ln -s namprovi_1_lin fort.4
-# mpirun ./arpege.exe
+
 ./arpege.exe
 codrep=$?
-if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 1'; exit
+[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 1 - Quadratic '; exit 1; }
 
 # Do some cleanup
 rm fort.4 Neworog
@@ -174,10 +176,10 @@ cp ${FILE_PATH_DBASE2}/vgx_GL   vgx_GL
 cp ${FILE_PATH_DBASE2}/dpr_GL   dpr_GL
 
 ln -s namprovi_2 fort.4
-# mpirun ./arpege.exe
+
 ./arpege.exe
 codrep=$?
-if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 2'; exit
+[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 2'; exit 1; }
 
 # Do some cleanup
 rm fort.4 *_GL
@@ -191,10 +193,10 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 done
 
 ln -s namprovi_3 fort.4
-# mpirun ./arpege.exe
+
 ./arpege.exe
 codrep=$?
-if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 3'; exit
+[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 3'; exit 1; }
 
 # Do some cleanup
 rm fort.4 N108_GL
@@ -224,10 +226,10 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
     cp ${FILE_PATH_DBASE2}/lai${MM}_GL  lai_GL
 
     ln -s namprovi_4 fort.4
-    # mpirun ./arpege.exe
+
     ./arpege.exe
     codrep=$?
-    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 4'; exit
+    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 4'; exit 1; }
 
     # Do some cleanup
     rm fort.4 veg_GL lai_GL
@@ -238,10 +240,10 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
     cp ${FILE_PATH_DBASE5}/lai_${MM}_HR  lai_HR
 
     ln -s namprovi_5 fort.4
-    # mpirun ./arpege.exe
+
     ./arpege.exe
     codrep=$?
-    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 5'; exit
+    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 5'; exit 1; }
 
     # Do some cleanup
     rm fort.4 veg_HR lai_HR
@@ -255,10 +257,10 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
     cp ${FILE_PATH_DBASE6}/snl_${MM}_GL.gz  snl_GL.gz ; gzip -d  snl_GL
 
     ln -s namprovi_6 fort.4
-    # mpirun ./arpege.exe
+
     ./arpege.exe
     codrep=$?
-    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 6'; exit
+    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 6'; exit 1; }
 
     # Do some cleanup
     rm fort.4 tsl_* tpl_* wsl_* wpl_* snl_*
@@ -268,10 +270,10 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
     cp ${FILE_PATH_DBASE8}/abc_quadra_${MM} abc_coef
 
     ln -s namprovi_8 fort.4
-    # mpirun ./arpege.exe
+
     ./arpege.exe
     codrep=$?
-    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 8'; exit
+    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 8'; exit 1; }
 
     # Do some cleanup
     rm fort.4 abc_coef
@@ -281,16 +283,16 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
     cp ${FILE_PATH_DBASE9}/aero.tegen.m${MM}_GL aero_GL
 
     ln -s namprovi_9 fort.4
-    # mpirun ./arpege.exe
+
     ./arpege.exe
     codrep=$?
-    if [ $codrep -ne 0 ] print '>>>>>>>> FAILED : Part 9'; exit
+    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 9'; exit 1; }
 
     # Do some cleanup
     rm fort.4 aero_GL
 
     #=== Move the output file to the save directory
-    mv Const.Clim "${SAVEDIR}/clim_arpege.tl127r.m${MM}" 
+    mv Const.Clim "${SAVEDIR}/clim_arpege.${GRID}r.m${MM}" 
 
 done
 
