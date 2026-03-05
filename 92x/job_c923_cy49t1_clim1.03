@@ -148,7 +148,7 @@ ln -s $EXEARP arpege.exe
 
 ./arpege.exe
 codrep=$?
-[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 1 - Linear '; exit 1; }
+if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 1 - Linear '; exit 1; fi
 
 mv Const.Clim Neworog
 rm fort.4
@@ -157,7 +157,7 @@ ln -s namprovi_1_lin fort.4
 
 ./arpege.exe
 codrep=$?
-[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 1 - Quadratic '; exit 1; }
+if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 1 - Quadratic '; exit 1; fi
 
 # Do some cleanup
 rm fort.4 Neworog
@@ -179,7 +179,7 @@ ln -s namprovi_2 fort.4
 
 ./arpege.exe
 codrep=$?
-[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 2'; exit 1; }
+if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 2'; exit 1; fi
 
 # Do some cleanup
 rm fort.4 *_GL
@@ -196,7 +196,7 @@ ln -s namprovi_3 fort.4
 
 ./arpege.exe
 codrep=$?
-[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 3'; exit 1; }
+if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 3'; exit 1; fi
 
 # Do some cleanup
 rm fort.4 N108_GL
@@ -229,7 +229,7 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     ./arpege.exe
     codrep=$?
-    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 4'; exit 1; }
+    if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 4'; exit 1; fi
 
     # Do some cleanup
     rm fort.4 veg_GL lai_GL
@@ -243,8 +243,8 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     ./arpege.exe
     codrep=$?
-    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 5'; exit 1; }
-
+    if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 5'; exit 1; fi
+ 
     # Do some cleanup
     rm fort.4 veg_HR lai_HR
 
@@ -260,7 +260,7 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     ./arpege.exe
     codrep=$?
-    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 6'; exit 1; }
+    if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 6'; exit 1; fi
 
     # Do some cleanup
     rm fort.4 tsl_* tpl_* wsl_* wpl_* snl_*
@@ -273,7 +273,7 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     ./arpege.exe
     codrep=$?
-    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 8'; exit 1; }
+    if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 8'; exit 1; fi
 
     # Do some cleanup
     rm fort.4 abc_coef
@@ -286,7 +286,7 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     ./arpege.exe
     codrep=$?
-    [ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED : Part 9'; exit 1; }
+    if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED : Part 9'; exit 1; fi
 
     # Do some cleanup
     rm fort.4 aero_GL

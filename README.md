@@ -22,8 +22,10 @@ Geometries tested and available on belenos :
 
 ## Toy(s)
 
-It provides very simple script to run the model. Data necessary to run the model should be available in a rundir from ECLIS.
+It provides very simple script to run the model. Data necessary to run the model should be available in a rundir from ECLIS. It is very easy to run without XIOS, just use the switch.
 Data are also available in a DAAC-DEV directory on belenos + a directory on Lustre.
+
+⚠️ TNote that for some reasons, XIOS does not work with the TL49. Shut if down for the moment.
 
 
 ## PGD-PREP

@@ -107,9 +107,8 @@ fi
 
 #=== Run directory
 set -x
-mkdir -p $FTDIR/cy49t1.03.${GRID}
-cd $FTDIR/cy49t1.03.${GRID}
-rm -f *
+TEMPORAIRE=$TMPDIR
+cd $TEMPORAIRE
 
 #=== Copying Namelist
 echo " copie de la namelist surfex"
@@ -166,7 +165,7 @@ if [[ $LPGD -ne 0 ]] ; then
 
    #=== Error catching
    if [[ $? -ne 0 ]] ; then
-      echo "run pgd failed !!! See in directory: $FTDIR/$CNMEXPL"
+      echo "run pgd failed !!! See in directory: $TEMPORAIRE"
       cat LISTING_PGD.txt
       cat OPTIONS.nam
       exit
@@ -191,7 +190,7 @@ fi
 echo " !!!!!!!!!! PREP CASE !!!!!!!! "
 
 #=== TRIP option
-if [[ $LRIP -ne 0 ]] ; then
+if [[ $LTRIP -ne 0 ]] ; then
    ln -s $TRIPDIR/TRIP_PGD_HD.nc .
    ln -s $TRIPDIR/TRIP_SGAQUI_HD.nc .
    ln -s $TRIPDIR/TRIP_SGFLOOD_HD.nc .
@@ -218,7 +217,7 @@ fi
 
 #=== Error catching
 if [[ $? -ne 0 ]] ; then
-  echo "run prep failed !!! See in directory: $FTDIR/$CNMEXPL"
+  echo "run prep failed !!! See in directory: ${TEMPORAIRE}"
   #cat LISTING_PREP0.txt
   exit
 fi
@@ -243,6 +242,6 @@ fi
 #=========================================================================
 #===== Cleaning and exit
 #=========================================================================
-rm -rf $FTDIR/$EXPNAME
+rm -rf $FTDIR/cy49t1.03.${GRID}
 exit
 

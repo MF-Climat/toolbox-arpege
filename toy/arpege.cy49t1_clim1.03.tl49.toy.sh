@@ -34,12 +34,11 @@ SUBVERSION=03
 LEVELS=91
 INIT=19790101
 
-REFPROF=/scratch/work/dayong/output/NODE.001_01.128cpus.conserv.ref
-
 # Pack containing the executable of the model :
 PACK=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y
 
 # XIOS server excecutable for the IO server :
+LXIOS=0 # Main switch for XIOS : 0=OFF, 1=ON
 XIOS3=/scratch/climat/APPS/xios/XIOS-2730--prod-intel2302oasis5-42cd5fee--oasistrunk-fcmold/bin/xios_server.exe
 
 # Model executable :
@@ -66,15 +65,16 @@ NNODE_XIOS=1
 NTASK_XIOS=4
 # Set the total number of MPI tasks for the I/O server :
 NPROC_XIOS=$((NNODE_XIOS*NTASK_XIOS))
-
+if [ $LXIOS -eq 0 ]; then NPROC_XIOS=0; fi
 
 ###########################################
 ########## Script configuration
 # Namelists
-NAMDIR=~dayong/toolbox-arpege/namelist
+NAMDIR=~/toolbox-arpege/namelist
 NAMATM=$NAMDIR/atm/nam.atm.tl49l15r.cy49t1_clim1.03
 NAMSFX=$NAMDIR/sfx/nam.sfx.tl49r.cy49t1_clim1.03
 NAMIOS=$NAMDIR/ios
+if [ $LXIOS -eq 0 ]; then NAMSFX=${NAMSFX}_noxios; fi
 
 # Restarts
 RESDIR=/scratch/climat/daac-dev/restart
@@ -95,18 +95,21 @@ XIOS_VERBOSE=false # print log files (logical)
 XIOS_VERBOSITY=10 # level of verbosity (0-100)
 
 # root directory of this benchmark :
-TOY=~dayong/toolbox-arpege/toy
+TOY=~/toolbox-arpege/toy
 # PATH to various tools provided and used in this benchmark :
 export PATH=$TOY/tools:$PATH
+# Reference NODE file
+REFPROF=$TOY/refprof/NODE.001_01.${GRID}r.128cpus.16proma.ref
 
 # root directory of input datasets (constants) of this benchmark :
 DATADIR=/scratch/climat/daac-dev/data
 
 # directory for the outputs (profile, NODE and xios output):
-ROOT_OUTDIR=/scratch/work/dayong/output
+ROOT_OUTDIR=/scratch/work/${USER}/output
 DATE=`date +%y%m%d%H%M`
 OUTDIR=$ROOT_OUTDIR/${MODEL}.${GRID}.${CY}.${SUBVERSION}.${DATE}
 mkdir -p $OUTDIR
+rm $OUTDIR/*.nc
 
 ###########################################
 ########## Environment variables
@@ -136,6 +139,7 @@ export ECCODES_DEFINITION_PATH=/home/gmap/mrpe/mary/public/ecCodes/2.38.1/share/
 # XIOS 3 specific :
 export ARPIFS_USE_XIOS=1
 export ARPIFS_XIOS_INVERT_LEVELS=1
+if [ $LXIOS -eq 0 ]; then ARPIFS_USE_XIOS=0; fi
 
 # MKL reproducibility
 export MKL_CBWR="AUTO,STRICT"
@@ -225,14 +229,15 @@ pwd
 RUNNER=/opt/softs/intel/oneapi/2023.2/mpi/2021.10.0/bin/mpiexec.hydra
 source /opt/softs/intel/oneapi/2023.2/mpi/2021.10.0/env/vars.sh
 
-rm /scratch/work/dayong/output/xios3/*
 
 #RUNNER=/opt/softs/intel/oneapi/2023.2/mpi/2021.10.0/bin/mpirun
 #RUNNER=/home/gmap/mrpm/marguina/SAVE/mpiauto/mpiauto
 
-pwd
-$RUNNER  -np $NPROC_XIOS $XIOS3 : -np $((NPROC_FC+NPROC_IO)) $MASTER
-#$RUNNER -np $((NPROC_FC+NPROC_IO)) $MASTER
+if [ $LXIOS -eq 1 ]; then
+   $RUNNER  -np $NPROC_XIOS $XIOS3 : -np $((NPROC_FC)) $MASTER
+else
+   $RUNNER -np $((NPROC_FC)) $MASTER
+fi
 
 ls -lrth
 

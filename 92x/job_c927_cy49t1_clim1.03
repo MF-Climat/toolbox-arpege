@@ -120,7 +120,7 @@ cp $EXEARP arpege.exe
 
 mpirun ./arpege.exe
 codrep=$?
-[ $codrep -ne 0 ] && { echo '>>>>>>>> FAILED'; exit 1; }
+if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED'; exit 1; fi
 
 #=== Move the output files to the save directory
 mv PFARPE000+0000 $SAVEDIR/${CNMEXPL}__PFARPE000+0000
