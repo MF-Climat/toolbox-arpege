@@ -12,7 +12,7 @@
 # Interpolation of Analysis or Forecast files towards the target horizontal and vertical grid.
 # Configuration 927.
 # sbatch <script-name>
-# 03/2026 : Tested for TL49, TL127
+# 03/2026 : Tested for TL49, TL127, TC127, TCO127
 
 # Load required modules and set environment variables
 set -x

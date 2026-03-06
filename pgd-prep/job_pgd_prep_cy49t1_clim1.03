@@ -9,7 +9,7 @@
 
 # Script for generation of PGD/PREP with SURFEX-v9 / ARPEGE-Climat v7.
 # sbatch <script-name> <grid> <lpgd> <ltrip>
-# Tested for TL49, TL127
+# Tested for TL49, TL127, TC127, TCO127
 # TRIP no tested.
 
 

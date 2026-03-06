@@ -1,0 +1,302 @@
+&NAM_FRAC              LECOCLIMAP = T
+/
+&NAM_PGD_GRID CGRID = 'GAUSS     '
+/
+&NAMDIM NDGLG = 256
+/
+&NAMGEM RMUCEN=1.000,
+        RLOCEN=0.000,
+        RSTRET=1.0
+/
+&NAMRGRI
+   NRGRI(  1)=18,
+   NRGRI(  2)=30,
+   NRGRI(  3)=36,
+   NRGRI(  4)=40,
+   NRGRI(  5)=50,
+   NRGRI(  6)=60,
+   NRGRI(  7)=64,
+   NRGRI(  8)=80,
+   NRGRI(  9)=80,
+   NRGRI( 10)=90,
+   NRGRI( 11)=96,
+   NRGRI( 12)=108,
+   NRGRI( 13)=120,
+   NRGRI( 14)=120,
+   NRGRI( 15)=128,
+   NRGRI( 16)=144,
+   NRGRI( 17)=144,
+   NRGRI( 18)=144,
+   NRGRI( 19)=160,
+   NRGRI( 20)=160,
+   NRGRI( 21)=180,
+   NRGRI( 22)=180,
+   NRGRI( 23)=180,
+   NRGRI( 24)=192,
+   NRGRI( 25)=192,
+   NRGRI( 26)=200,
+   NRGRI( 27)=216,
+   NRGRI( 28)=216,
+   NRGRI( 29)=216,
+   NRGRI( 30)=240,
+   NRGRI( 31)=240,
+   NRGRI( 32)=240,
+   NRGRI( 33)=240,
+   NRGRI( 34)=250,
+   NRGRI( 35)=250,
+   NRGRI( 36)=256,
+   NRGRI( 37)=270,
+   NRGRI( 38)=270,
+   NRGRI( 39)=288,
+   NRGRI( 40)=288,
+   NRGRI( 41)=288,
+   NRGRI( 42)=300,
+   NRGRI( 43)=300,
+   NRGRI( 44)=320,
+   NRGRI( 45)=320,
+   NRGRI( 46)=320,
+   NRGRI( 47)=320,
+   NRGRI( 48)=360,
+   NRGRI( 49)=360,
+   NRGRI( 50)=360,
+   NRGRI( 51)=360,
+   NRGRI( 52)=360,
+   NRGRI( 53)=360,
+   NRGRI( 54)=360,
+   NRGRI( 55)=360,
+   NRGRI( 56)=384,
+   NRGRI( 57)=384,
+   NRGRI( 58)=384,
+   NRGRI( 59)=384,
+   NRGRI( 60)=384,
+   NRGRI( 61)=400,
+   NRGRI( 62)=400,
+   NRGRI( 63)=400,
+   NRGRI( 64)=400,
+   NRGRI( 65)=432,
+   NRGRI( 66)=432,
+   NRGRI( 67)=432,
+   NRGRI( 68)=432,
+   NRGRI( 69)=432,
+   NRGRI( 70)=432,
+   NRGRI( 71)=432,
+   NRGRI( 72)=450,
+   NRGRI( 73)=450,
+   NRGRI( 74)=450,
+   NRGRI( 75)=450,
+   NRGRI( 76)=450,
+   NRGRI( 77)=480,
+   NRGRI( 78)=480,
+   NRGRI( 79)=480,
+   NRGRI( 80)=480,
+   NRGRI( 81)=480,
+   NRGRI( 82)=480,
+   NRGRI( 83)=480,
+   NRGRI( 84)=480,
+   NRGRI( 85)=480,
+   NRGRI( 86)=480,
+   NRGRI( 87)=486,
+   NRGRI( 88)=486,
+   NRGRI( 89)=500,
+   NRGRI( 90)=500,
+   NRGRI( 91)=500,
+   NRGRI( 92)=500,
+   NRGRI( 93)=500,
+   NRGRI( 94)=500,
+   NRGRI( 95)=500,
+   NRGRI( 96)=512,
+   NRGRI( 97)=512,
+   NRGRI( 98)=512,
+   NRGRI( 99)=512,
+   NRGRI(100)=512,
+   NRGRI(101)=512,
+   NRGRI(102)=512,
+   NRGRI(103)=512,
+   NRGRI(104)=512,
+   NRGRI(105)=512,
+   NRGRI(106)=512,
+   NRGRI(107)=512,
+   NRGRI(108)=512,
+   NRGRI(109)=512,
+   NRGRI(110)=512,
+   NRGRI(111)=512,
+   NRGRI(112)=512,
+   NRGRI(113)=512,
+   NRGRI(114)=512,
+   NRGRI(115)=512,
+   NRGRI(116)=512,
+   NRGRI(117)=512,
+   NRGRI(118)=512,
+   NRGRI(119)=512,
+   NRGRI(120)=512,
+   NRGRI(121)=512,
+   NRGRI(122)=512,
+   NRGRI(123)=512,
+   NRGRI(124)=512,
+   NRGRI(125)=512,
+   NRGRI(126)=512,
+   NRGRI(127)=512,
+   NRGRI(128)=512,
+/
+&NAM_PGD_SCHEMES       CNATURE = 'ISBA  '  , 
+                       CSEA    = 'SEAFLX'  , 
+                       CTOWN   = 'NONE  '  , 
+                       CWATER  = 'FLAKE '
+/
+&NAM_PGD_ARRANGE_COVER  LWATER_TO_NATURE = T ,
+                        LTOWN_TO_ROCK    = T
+/
+&NAM_COVER             YCOVER        = 'ecoclimap',
+                       YCOVERFILETYPE= 'DIRECT'   ,
+		       XRM_COVER     = 0.01       ,
+		       XRM_COAST     = 0.99       ,
+		       XRM_LAKE      = 0.05       ,
+		       XRM_SEA       = 0.20       ,
+                       LRM_RIVER     = T          ,
+		       LORCA_GRID    = T          ,
+                       XLAT_ANT      = -79.
+/
+&NAM_ECOCLIMAP2        LCLIM_LAI=T
+/
+&NAM_ZS                YZS           = 'topo'     ,
+                       YZSFILETYPE   = 'DIRECT'
+/
+&NAM_SEABATHY          XUNIF_SEABATHY=0.
+/
+&NAM_ISBA              YCLAY         = 'clay'        ,
+                       YCLAYFILETYPE = 'DIRECT'      ,   
+                       YSAND         = 'sand'        ,
+                       YSANDFILETYPE = 'DIRECT'      ,
+		       YCTI          = 'topo_index'  ,
+		       YCTIFILETYPE  = 'DIRECT'      ,
+		       YSOC_TOP      = 'soc_top'     ,
+		       YSOC_SUB      = 'soc_sub'     ,
+		       YSOCFILETYPE  = 'DIRECT'      ,
+		       YPERM         = 'perm_glo_10km',
+		       YPERMFILETYPE = 'DIRECT'      ,
+                       CPEDO_FUNCTION= 'CH78'        ,
+                       CISBA         = 'DIF'         ,
+                       CPHOTO        = 'NCB'         ,
+                       LTR_ML        = T             ,
+                       NPATCH        = 12            ,
+                       NGROUND_LAYER = 14
+/
+&NAM_DATA_FLAKE        YWATER_DEPTH            = 'lake_depth',
+                       YWATER_DEPTHFILETYPE    = 'DIRECT'    ,
+                       XUNIF_EXTCOEF_WATER     = 0.5         ,
+		       XMAX_DEPTH              = 60.
+/
+&NAM_PREP_ISBA_CARBON  CRESPSL   = 'DEF'
+/
+
+&NAM_PREP_SURF_ATM     NYEAR  = 1990,
+                       NMONTH = 1                   ,
+                       NDAY   = 1                   ,
+                       XTIME  = 0.                  ,
+		       CFILEPGD     = 'restart_sfx_pgd' ,
+                       CFILEPGDTYPE = 'FA'          ,
+		       CFILE        = 'restart_sfx',
+                       CFILETYPE    = 'FA'
+/
+&NAM_PREP_ISBA         NINFILES=14,
+/
+&NAM_PREP_SEAFLUX      XSST_UNIF = 280.16      ,
+                       CSEAICE_SCHEME= 'GELATO',
+                       XSSS_UNIF = 0.0         ,
+                       XSIC_UNIF = 0.0
+/
+&NAM_PREP_FLAKE        LCLIM_LAKE = F
+/
+&NAM_PREP_ISBA_SNOW    CSNOW          = '3-L',
+                       LSNOW_IDEAL    = T    ,
+                       NSNOW_LAYER    = 12
+/
+&NAM_ISBA_SNOWn        CSNOWDRIFT    = 'DFLT'
+/
+&NAM_SURF_ATM          LNOSOF        = T        ,
+                       LVERTSHIFT    = F        ,
+		       XVZ0CM        = 1.E-5    ,
+                       XRIMAX        = 0.2      ,    
+                       XDELTA_MAX    = 0.9      ,
+                       LCO2FOS       = F
+/
+&NAM_SURF_CSTS         XEMISSN       = 0.99  ,
+                       XALBCOEF_TA96 = 0.036 ,
+		       XALBSCA_WAT   = 0.065 ,
+                       XALBWAT       = 0.065 ,
+		       XEMISWAT      = 0.96  ,
+		       XALBWATICE    = 0.40  ,
+		       XALBSEAICE    = 0.71  ,
+		       XEMISWATICE   = 0.97  ,
+                       XHGLA         = 1.0E3 ,
+		       XWSNV         = 2.0
+/
+&NAM_SEAFLUXn          CSEA_FLUX    = 'ECUME6',
+                       CSEA_ALB     = 'RS14'  ,
+                       LPRECIP      = F       ,
+                       LPWG         = F       ,
+		       CINTERPOL_SST= 'LINEAR'
+/
+&NAM_SEAICEn           LDIAG_MISC_SEAICE       = T       ,
+                       CINTERPOL_SIC      = 'LINEAR',
+                       XFREEZING_SST      = -0.95   ,
+                       XSI_FLX_DRV        = -20.
+/
+&NAM_FLAKEn            LSEDIMENTS = F     ,
+                       LSKINTEMP  = T     ,
+                       CFLK_FLUX = 'FLAKE',
+                       CFLK_ALB  = 'TA96'
+/
+&NAM_SSOn              CROUGH       = 'Z01D'
+/
+&NAM_ISBAn             CC1DRY       = 'DEF '	,
+                       CSCOND       = 'PL98'	,
+		       CSOILFRZ     = 'LWT'	,
+		       CDIFSFCOND   = 'DEF '	,
+		       CSNOWRES     = 'RIL'	,
+		       CCPSURF      = 'DRY'     ,
+		       LGLACIER     = T
+/
+&NAM_ISBA_AGSn         CNITRO_DILU  = 'ESM2'    ,
+                       LDOWNREGU    = T         ,
+                       XCNLIM       = -0.036
+/
+&NAM_ISBA_CCn          LFIRE        = F       ,
+                       LCLEACH      = F       ,
+                       LLULCC_MANAGE= F
+/
+&NAM_SGH_ISBAn         CRUNOFF      = 'SGH '	,
+		       CRAIN        = 'SGH '	,
+		       CHORT        = 'CM6'    ,
+                       LSOC         = T
+/
+&NAM_DIAG_SURF_ATMn    LDIAG_MIP   = T
+/
+&NAM_WRITE_SURF_ATM    LNOWRITE_CANOPY  = T,
+                       LNOWRITE_TEXFILE = T
+/
+&NAM_IO_OFFLINE        CSURF_FILETYPE       = 'FA    ',
+                       CTIMESERIES_FILETYPE = 'XIOS  ',
+                       LALLOW_ADD_DIM       = T       ,
+                       CFORCING_FILETYPE    = 'NETCDF',
+                       XTSTEP_SURF          = 900.    ,
+                       XTSTEP_OUTPUT        = 900.    ,
+                       LLIMIT_QAIR          = T       ,
+                       LSET_FORC_ZS         = T       ,
+                       LOUT_TIMENAME        = T       ,
+                       LPRINT               = F       ,
+                       LINQUIRE             = F       ,
+                       LRESTART             = T       ,
+                       LWRITE_COORD         = F       ,
+                       LFAGMAP              = T       ,
+                       LFAGMAP_IN           = T       ,
+                       YALG_MPI             = 'TILL'  ,
+                       NHALO                = 0       ,
+                       CTIME_INTERP_PRCP    = 'PDF'   ,
+                       LNEW_TIME_INTERP_ATM = T       ,
+                       NB_READ_FORC         = 1
+/
+&NAM_IO_SURF_ARO       CFILETYPE        = 'FA    '
+                       LALLOW_ADD_DIM=T,
+                       CTIMESERIES_FILETYPE = 'XIOS  ',
+/

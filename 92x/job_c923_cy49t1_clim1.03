@@ -11,7 +11,7 @@
 # Script for generation of CLIM files for ARPEGE-Climat v7.
 # Configuration 923.
 # sbatch <script-name>
-# Tested for TL49, TL127
+# Tested for TL49, TL127, TC127, TCO127
 
 # Load required modules and set environment variables
 set -x
