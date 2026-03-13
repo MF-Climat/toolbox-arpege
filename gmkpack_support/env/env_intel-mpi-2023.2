@@ -1,0 +1,87 @@
+#!/bin/bash
+
+module () 
+{ 
+    eval `/usr/bin/modulecmd bash $*`
+}
+
+INTELONEAPI="intel/oneapi/2023.2"
+MPIPACKAGE="mpi/2021.10.0"
+MKL="mkl/2023.2.0"
+COMPILER="compiler/2023.2.0"
+module purge                   2>/dev/null
+module load $INTELONEAPI       2>/dev/null
+module load $COMPILER          2>/dev/null
+module load $MKL               2>/dev/null
+module load $MPIPACKAGE        2>/dev/null
+module load gcc/14.1.0          2>/dev/null
+
+export TMP=/tmp
+
+# path to fypp :
+export PYTHONPATH=/opt/softs/anaconda3/lib/python3.7/site-packages:$PYTHONPATH
+export PATH=/opt/softs/anaconda3/bin:$PATH
+# path to cmake :
+module load cmake/3.24.1 2>/dev/null
+
+# For all :
+# -lirng -lcilkrts because ECMWF works with the mandatory intel modules and they missed the rpath in background libraries
+COMPILER_LIBRARIES="-qmkl=sequential -lirc -lirng -lcilkrts $(echo $LD_LIBRARY_PATH | sed -e "s/:/ -Wl,-rpath,/g" -e "s/^/-Wl,-rpath,/")"
+
+# Needed to have fortran libraries linked with C++ :
+FORTRAN_LIBRARIES="-lifcoremt -lifport"
+
+# Bitwise reproducibility of MKL on non-Intel chips :
+MKLTRICK_LIBDIR=/home/gmap/mrpm/khatib/opt/gcc/14.1.0/mkl_serv_intel_cpu_true
+MKLTRICK_LDFLAGS="-L$MKLTRICK_LIBDIR -ltrick -Wl,-rpath,$MKLTRICK_LIBDIR"
+
+#-------- Careful with these ---------------------------------
+# install root directories now exported because they may be targetted by ecbuild :
+# Fortran and C :
+export AUX_INSTALLDIR=/home/gmap/mrpm/khatib/opt/i-2018.5.274/auxlibs
+AUX_LIBDIR=$AUX_INSTALLDIR/lib
+AUX_LDFLAGS="-L$AUX_LIBDIR -Wl,-rpath,$AUX_LIBDIR"
+export ECCODES_INSTALLDIR=/home/gmap/mrpm/khatib/opt/intel/2023.2/legacy/eccodes-2.38.3
+ECCODES_INCDIR=$ECCODES_INSTALLDIR/include
+ECCODES_LIBDIR=$ECCODES_INSTALLDIR/lib64
+ECCODES_LDFLAGS="-L$ECCODES_LIBDIR -Wl,-rpath,$ECCODES_LIBDIR"
+export NETCDF_INSTALLDIR=/home/gmap/mrpm/khatib/opt/i-2018.5.274/netcdf-4.7.1
+NETCDF_INCDIR=$NETCDF_INSTALLDIR/include
+NETCDF_LIBDIR=$NETCDF_INSTALLDIR/lib
+NETCDF_LDFLAGS="-L$NETCDF_LIBDIR -Wl,-rpath,$NETCDF_LIBDIR"
+export HDF5_INSTALLDIR=/home/gmap/mrpm/khatib/opt/i-2018.5.274/hdf5-1.8.18
+HDF5_INCDIR=$HDF5_INSTALLDIR/include
+HDF5_LIBDIR=$HDF5_INSTALLDIR/lib
+HDF5_LDFLAGS="-L$HDF5_LIBDIR -Wl,-rpath,$HDF5_LIBDIR"
+# C++ :
+export BOOST_INSTALLDIR=/opt/softs/libraries/GCC_5.3.0/boost-1.73.0
+BOOST_INCDIR=$BOOST_INSTALLDIR/include
+BOOST_LIBDIR=$BOOST_INSTALLDIR/lib
+BOOST_LDFLAGS="-L$BOOST_LIBDIR -Wl,-rpath,$BOOST_LIBDIR"
+
+# Eigen3
+export EIGEN_INCDIR=/home/gmap/mrpm/khatib/opt/eigen-3.3.7
+
+LOCAL_CPPFLAGS="-I$HDF5_INCDIR -I$NETCDF_INCDIR -I$ECCODES_INCDIR -I$BOOST_INCDIR -I$EIGEN_INCDIR"
+LOCAL_LDFLAGS="$AUX_LDFLAGS $ECCODES_LDFLAGS $NETCDF_LDFLAGS $HDF5_LDFLAGS $MKLTRICK_LDFLAGS"
+#-------------------------------------------------------------------------------------------
+
+# For cpp :
+export CPATH="$(echo $LOCAL_CPPFLAGS | sed "s/-I//g" | sed "s/ /:/g"):$CPATH"
+
+export __INTEL_POST_CFLAGS="$LOCAL_CPPFLAGS $LOCAL_LDFLAGS $BOOST_LDFLAGS $COMPILER_LIBRARIES $FORTRAN_LIBRARIES"
+export __INTEL_POST_FFLAGS="$LOCAL_CPPFLAGS $LOCAL_LDFLAGS $COMPILER_LIBRARIES"
+
+# A taste of 'module show' :
+echo
+echo "setting $MPIPACKAGE with $COMPILER :"
+echo "__INTEL_POST_CFLAGS=$__INTEL_POST_CFLAGS"
+echo "__INTEL_POST_FFLAGS=$__INTEL_POST_FFLAGS"
+echo "CPATH=$CPATH"
+echo "eccodes root directory : ECCODES_INSTALLDIR=$ECCODES_INSTALLDIR"
+echo "Netcdf  root directory : NETCDF_INSTALLDIR=$NETCDF_INSTALLDIR"
+echo "HDF5    root directory : HDF5_INSTALLDIR=$HDF5_INSTALLDIR"
+echo "BOOST   root directory : BOOST_INSTALLDIR=$BOOST_INSTALLDIR"
+echo "AUX     root directory : AUX_INSTALLDIR=$AUX_INSTALLDIR"
+echo "Eigen3 include directory : EIGEN_INCDIR=$EIGEN_INCDIR"
+echo
