@@ -12,14 +12,15 @@
 # x86 hpc
 #SBATCH -p normal256
 #SBATCH --mem=247000
-#SBATCH --ntasks 128
-#SBATCH --nodes 1
-#SBATCH --cpus-per-task 1
+#SBATCH --nodes=1
 #SBATCH --time=00:10:00
 #SBATCH --export=NONE
 #SBATCH --exclusiv
 
 module load gcc/14.1.0
+module load intel/oneapi/2023.2 mkl/2023.2.0
+OASIS_LIBDIR=/home/gmgec/mrgc/dayong/apps/oasis-mct_5.0_7a92be0/lib
+export LD_LIBRARY_PATH=$OASIS_LIBDIR:$LD_LIBRARY_PATH
 set -x
 
 ###########################################
