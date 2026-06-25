@@ -1,81 +1,97 @@
 #!/bin/bash
 #
-#SBATCH -p normal256
-#SBATCH --mem=247000
+#    Syntaxe : sbatch $0 [options] Config_filename
+#               ==============================================================================
+#               Config_filename = file on which inputs (namelists,executables,data) are defined
+#                                 for those which are not defined a default value is use instead
+#                                 if not provided, defaults are used 
+#               ==============================================================================
+#               -p  0 -> no pgd computed
+#                   1 -> pgd computed (default)
+#               ==============================================================================
+#
+#
+#
+#SBATCH -p shared
 #SBATCH --ntasks 1
 #SBATCH --time=02:00:00
 #SBATCH -J pgd-prep_climat
 #SBATCH -o pgd-prep_climat.o%j
+#
+#
 
-# Script for generation of PGD/PREP with SURFEX-v9 / ARPEGE-Climat v7.
-# sbatch <script-name> <grid> <lpgd> <ltrip>
-# Tested for TL49, TL127, TC127, TCO127
-# TRIP no tested.
+while getopts "p:c:h?" flags ; do
+  case $flags in 
+    p) LPGD=${OPTARG};;
+    c) CONFIGFILE=${OPTARG};;
+    h|?) echo -e "job_pgd_prep takes two optional kwargs :\n -c config file \n -p option to create pgd  "
+         exit 0;;
+    \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
+        exit 1;; 
+  esac
+done
+
+shift $(($OPTIND-1));
 
 
+if [ $# -ne 0 ]; then 
+  echo "Invalid argument(s) "$@
+  exit 1
+fi 
 
-if test $# -ne 3
-then
-  echo " "
-  echo "Syntaxe : $0 EXP PGD TRIP"
-  echo "             =========================="
-  echo "             GRID = grid type - tl/tc/tco"
-  echo "             =========================="
-  echo "             PGD = 0 -> no pgd computed"
-  echo "             PGD = 1 -> pgd computed"
-  echo "             =========================="
-  echo "             TRIP = 0 -> no TRIP"
-  echo "             TRIP = 1 -> TRIP activated"
-  echo "             =========================="
-  echo " "
-  exit
+if [ -s "$CONFIGFILE" ] ; then
+  source $CONFIGFILE
 fi
-#
-GRID=$1
-LPGD=$2
-LTRIP=$3
-#
-echo $GRID $LPGD $LTRIP
-#
+
+set -vx
+
 #=========================================================================
-#===== Configuration
+#===== Default Configuration
 #=========================================================================
+
+# Create PGD by default
+LPGD=${LPGD:-1}
+
+#
+GRID=${GRID:-tl127}
+CNMEXPL=${CNMEXPL:-cy49t1_clim1.03_${GRID}}
+
+# assuming the job has been lauch from the toolbox-arpege/pgd-prep directory
+TOOLBOX_DIR=$(pwd)/..
+#=== Is TRIP involved (default 0=no)
+LTRIP=${LTRIP:-0}
+#
 #=== Binaries
-PACK=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin
-EXEPGD=$PACK/PGD
-EXEPREP=$PACK/PREP
-EXETRIP=$PACK/TRIP_PREP
+EXEPGD=${EXEPGD:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PGD}
+EXEPREP=${EXEPREP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PREP}
+EXETRIP=$EXETRIP
 
 #=== Namelists
-NAMDIR=~/toolbox-arpege/namelist
-NAMELIST=$NAMDIR/sfx/nam.sfx.${GRID}r.pgd.cy49t1_clim1.03
-TRIPNAML=$NAMDIR/riv/TRIP_OPTIONS.nam # dummy for the moment
+NAMSFX=${NAMSFX:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.pgd.cy49t1_clim1.03}
+TRIPNAML=${TRIPNAML}
+OASISNAML=${OASISNAML:-${TOOLBOX_DIR}/namelist/cpl/namcouple.prep} # Empty namelist, just needed for OASIS
 
-#=== Restarts
-RESDIR=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
-FA_PGDFILE=$RESDIR/PGD.AGCM.tl127r.cy49t1_clim1.03.fa
-FA_INITFILE=$RESDIR/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa
+#=== Restarts
+FA_PGDFILE=${FA_PGDFILE:-/scratch/climat/CEDRE/restart/sfx/tl127r/v7/PGD.AGCM.tl127r.cy49t1_clim1.03.fa}
+FA_INITFILE=${FA_INITFILE:-/scratch/climat/CEDRE/restart/sfx/tl127r/v7/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa}
+TRIP_INITFILE=$TRIP_INITFILE
 
-#=== LULUC parameters - not used for the moment
-LUYEAR=1700
-LULUCCF=
+#=== Output directory
+SAVEDIR=${SAVEDIR:-/scratch/work/${USER}/${CNMEXPL}}
 
-#=== SAVE directory
-CNMEXPL=cy49t1_clim1.03_${GRID}$r
-SAVEDIR=/scratch/work/${USER}/pgd-prep/${CNMEXPL}
-mkdir -p $SAVEDIR
-rm -f $SAVEDIR/*
+#=== Constants files and directory sources
+ECODIR=${ECODIR:-/home/cnrm_other/ge/mrmm/decharme/ecoclimap_cnrm_cm6.02}
+FRACDIR=${FRACDIR:-/scratch/work/roehrig/sfx/ecoclimap/46t1} # for frac_*.asc
+TRIPDIR=${TRIPDIR:-$ECODIR}
+GRIB_INITFILE=$ECODIR/restart_grib/GRIDSURFARP.tl127l31r
 
 #=========================================================================
 #===== End of main configuration elements
 #=========================================================================
-
-#=== Constants files and directory sources
-ECODIR=/home/cnrm_other/ge/mrmm/decharme/ecoclimap_cnrm_cm6.02
-TRIPDIR=/home/cnrm_other/ge/mrmm/decharme/ecoclimap_cnrm_cm6.02
-ECOBINDIR=$ECODIR
 #
-GRIB_INITFILE=$ECODIR/restart_grib/GRIDSURFARP.tl127l31r
+if [ ! -r $SAVEDIR ]; then
+  mkdir -p $SAVEDIR
+fi
 
 #=== Environement
 ulimit -s unlimited
@@ -106,13 +122,12 @@ if [[ $LTRIP -ne 0 ]] ; then
 fi
 
 #=== Run directory
-set -x
 TEMPORAIRE=$TMPDIR
 cd $TEMPORAIRE
 
 #=== Copying Namelist
 echo " copie de la namelist surfex"
-cp $NAMELIST OPTIONS.nam
+cp $NAMSFX OPTIONS.nam
 if [[ $LTRIP -ne 0 ]] ; then
    echo " "
    echo " copie de la namelist trip"
@@ -121,8 +136,8 @@ if [[ $LTRIP -ne 0 ]] ; then
 fi
 
 #=== Copying constant
-ln -s $ECOBINDIR/ecoclimapI_covers_param.bin .
-ln -s $ECOBINDIR/ecoclimapII_eu_covers_param.bin .
+ln -s $ECODIR/ecoclimapI_covers_param.bin .
+ln -s $ECODIR/ecoclimapII_eu_covers_param.bin .
 
 
 #=========================================================================
@@ -154,13 +169,15 @@ if [[ $LPGD -ne 0 ]] ; then
    ln -s $ECODIR/soc* .
    ln -s $ECODIR/perm_glo* .
 
+   # nat/sea/wat fraction files to follow nemo land/sea mask - if not used in the namelist and not present here -> no pb
+   ln -s  $FRACDIR/frac_???.asc .
+
    #for vegtype in `seq 1 1 19` ; do
    #  [ ${LUYEAR} -gt 0 ] && ln -s ${LULUCCF}/vegtype${vegtype}_1d_60S-90N_cmip6_official_LUH2_GCP2023_lulccf_on_ecoclimap_${LUYEAR}.txt pft${vegtype}.txt
    #done
 
    echo " copie et execution du pgd "
    ln -s $EXEPGD pgd.exe
-   #mpirun -np 1 pgd.exe
    ./pgd.exe
 
    #=== Error catching
@@ -173,6 +190,7 @@ if [[ $LPGD -ne 0 ]] ; then
 
    #=== Saving outputs
    mv PGD.fa  $SAVEDIR/PGD.fa
+   echo "PGD=$SAVEDIR/PGD.fa">>$CONFIGFILE
    #mv PGD.nc  $SAVEDIR/PGD.nc
 
   if [[ $DR_HOOK -ne 0 ]] ; then
@@ -211,7 +229,6 @@ ln -s $EXEPREP prep.exe
 if [[ $LTRIP -ne 0 ]] ; then
    mpirun -np 1 prep.exe : -np 1 trip_prep.exe
 else
-   #mpirun -np 1 prep.exe
    ./prep.exe
 fi
 
@@ -242,6 +259,5 @@ fi
 #=========================================================================
 #===== Cleaning and exit
 #=========================================================================
-rm -rf $FTDIR/cy49t1.03.${GRID}
 exit
 

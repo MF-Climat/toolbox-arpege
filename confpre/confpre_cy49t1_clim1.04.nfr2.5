@@ -1,0 +1,26 @@
+#=== Flag for regional 
+REGIONAL=1
+
+#=== Binaries
+EXEPGD=/scratch/work/haradercoustaue/packs/CY49T1_clim1.04.debug.IMPIIFC2302DP.y/bin/PGD
+EXEPREP=/scratch/work/haradercoustaue/packs/CY49T1_clim1.04.debug.IMPIIFC2302DP.y/bin/PREP
+EXEARP=/scratch/work/haradercoustaue/packs/CY49T1_clim1.04.debug.IMPIIFC2302DP.y/bin/MASTERODB
+
+#=== Geometry and version
+GRID=NFR2.5
+NDATX=360 # What for ? - might not be needed -
+NDATY=180 # What for ? - might not be needed -
+#
+
+#=== Namelists
+NAMARP=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/conf927_NFR3l60_cy49t1_clim1.04
+NAMLIN=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/clim.${GRID}.cy49.lin
+NAMQUAD=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/clim.${GRID}.cy49.quad
+NAMSFX=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/sfx/nam.sfx.ARCM.${GRID}.cy49t1_clim1.04.rl.noteb
+
+#=== Restarts
+CLIMDIR=/home/gmgec/mrgo/haradercoustaue/AROME49/NFR2.5/clim
+
+#=== Output directory
+CNMEXPL=cy49t1_clim1.04_${GRID}
+PGD=/scratch/work/haradercoustaue/cy49t1_clim1.04_NFR2.5/PGD.fa
