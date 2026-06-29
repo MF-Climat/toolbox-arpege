@@ -1,0 +1,28 @@
+#=== Binaries
+pack=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin
+EXEPGD=$pack/PGD
+EXEPREP=$pack/PREP
+EXEARP=$pack/MASTERODB
+
+#=== Geometry
+GRID=ALPX12
+GRIDl=ALPX12l60
+
+#=== Output directory
+SAVEDIR=$workdir/ALADIN/tests/${GRID}/
+
+#=== Namelists
+NAMSFX=/home/gmgec/mrgo/gevaudanm/ALADIN/tests/${GRID}/namelist/sfx/nam.sfx.ARCM.${GRID}.cy49t1_clim1.03
+NAMSFXpgd=$NAMSFX ; NAMSFXc923=$NAMSFX ; NAMSFXc927=$NAMSFX
+NAMLIN=/home/gmgec/mrgo/gevaudanm/ALADIN/tests/${GRID}/namelist/atm/nam.atm.ARCM.${GRIDl}.c923.cy49t1_clim1.03.lin
+NAMQUAD=/home/gmgec/mrgo/gevaudanm/ALADIN/tests/${GRID}/namelist/atm/nam.atm.ARCM.${GRIDl}.c923.cy49t1_clim1.03.quad
+
+#=== Restarts
+resdir=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
+FA_PGDFILE=$resdir/PGD.AGCM.tl127r.cy49t1_clim1.03.fa
+FA_INITFILE=$resdir/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa
+
+#=== PGD file (filled by job_pgd-prep ; necessary for standalone clim creation by job_c923)
+#=== + CLIMDIR (filled by job_c923 ; necessary for standalone atm restart creation by job_c927)
+PGD=/scratch/work/gevaudanm/ALADIN/tests/ALPX12//pgdprep/cy49t1_clim1.03.ALPX12.ARCM/PGD.fa
+CLIMDIR=/scratch/work/gevaudanm/ALADIN/tests/ALPX12//c923/cy49t1_clim1.03.ALPX12.ARCM

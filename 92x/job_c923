@@ -4,19 +4,18 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=128
-#SBATCH --time 00:20:00
+#SBATCH --time 01:20:00
 #SBATCH --exclusive
 #SBATCH -o c923_climat.o%j
 
 # Script for generation of CLIM files for ARPEGE-Climat v7.
 # Configuration 923.
-# sbatch <script-name>
+# sbatch <script-name> -c <config-file> (optional)
 # Tested for TL49, TL127, TC127, TCO127
 
 # Load required modules and set environment variables
-set -x
 ulimit -s unlimited
-module purge
+module purge ||:
 module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
 export MKL_CBWR=AUTO,STRICT
 export OMP_STACKSIZE=4G
@@ -34,47 +33,83 @@ export KMP_AFFINITY="verbose,compact,granularity=fine"
 export KMP_BLOCKTIME=12
 export OMP_WAIT_POLICY=ACTIVE
 export EC_MEMINFO=0
-set +x
 
+while getopts "c:h?" flags ; do
+  case $flags in
+    c) CONFIGFILE=${OPTARG};;
+    h|?) echo -e "job_c923_cy49 takes one optional kwarg :\n -c config file "
+         exit 0;;
+    \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
+        exit 1;;
+  esac
+done
+
+shift $(($OPTIND-1));
+
+if [ $# -ne 0 ]; then
+  echo "Invalid argument(s) "$@
+  exit 1
+fi
+
+expname=cy49t1_clim1.03_tl127r
+if [ -s "$CONFIGFILE" ] ; then
+  CONFIGFILE=$( realpath $CONFIGFILE )
+  expname=$(basename $CONFIGFILE)
+  source $CONFIGFILE
+fi
+
+set -vx
 
 #=========================================================================
-#===== Configuration
+#===== Default Configuration
 #=========================================================================
+#
+# assuming the job has been lauch from the toolbox-arpege/pgd-prep directory
+TOOLBOX_DIR=$(pwd)/..
+#
 #=== Binaries
-PACK=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y
-EXEARP=$PACK/bin/MASTERODB
+EXEARP=${EXEARP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/MASTERODB}
 
 #=== Geometry and version
-GRID=tl127
-NDATX=360 # What for ? - might not be needed -
-NDATY=180 # What for ? - might not be needed -
+GRID=${GRID:-tl127r}
+GRIDl=${GRIDl:-tl127l91r}
+#NDATX=360 # What for ? - might not be needed -
+#NDATY=180 # What for ? - might not be needed -
 
 #=== Namelists
-NAMDIR=~/toolbox-arpege/namelist
-NAMSFX=$NAMDIR/sfx/nam.sfx.${GRID}r.c923.cy49t1_clim1.03
-NAMLIN=$NAMDIR/atm/nam.atm.${GRID}l91r.c923.cy49t1_clim1.03.lin
-NAMQUAD=$NAMDIR/atm/nam.atm.${GRID}l91r.c923.cy49t1_clim1.03.quad
+NAMSFX=${NAMSFXc923:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}.c923.cy49t1_clim1.03}
+NAMLIN=${NAMLIN:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c923.cy49t1_clim1.03.lin}
+NAMQUAD=${NAMQUAD:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c923.cy49t1_clim1.03.quad}
 
 #=== SAVE directory and experiment name
-CNMEXPL=cy49t1_clim1.03_${GRID}
-SAVEDIR=/scratch/work/${USER}/c923/${CNMEXPL}
-mkdir -p $SAVEDIR
-rm -f $SAVEDIR/*
+SAVEDIR=${SAVEDIR:-$workdir} ; SAVEDIR=$SAVEDIR/c923/$expname
 
 #=========================================================================
 #===== End of main configuration elements
 #=========================================================================
+if [ ! -r $SAVEDIR ]; then
+  mkdir -p $SAVEDIR
+fi
+rm -f $SAVEDIR/clim_*
 
-#=== Define constants and paths
+#=== Define constants, paths and files
 # Path
-FILE_PATH_DBASE=/scratch/climat/daac-dev/data/923N
-FILE_PATH_DBASE1=${FILE_PATH_DBASE}/RELIEF_G/GTOPT030
-FILE_PATH_DBASE2=${FILE_PATH_DBASE}/SURFACE_G/version2/i3e
-FILE_PATH_DBASE3=${FILE_PATH_DBASE}/N108/i3e
-FILE_PATH_DBASE5=${FILE_PATH_DBASE}/SURFACE_L/EUROPEb_v1/i3e
-FILE_PATH_DBASE6=${FILE_PATH_DBASE}/CLIM_G/version2/i3e
-FILE_PATH_DBASE8=${FILE_PATH_DBASE}/CLIM_G/ozone/ascii
-FILE_PATH_DBASE9=${FILE_PATH_DBASE}/CLIM_G/aerosols/ascii
+FILE_PATH_DBASE=${FILE_PATH_DBASE:-/scratch/climat/daac-dev/data/923N}
+FILE_PATH_DBASE1=${FILE_PATH_DBASE1:-${FILE_PATH_DBASE}/RELIEF_G/GTOPT030}
+FILE_PATH_DBASE2=${FILE_PATH_DBASE2:-${FILE_PATH_DBASE}/SURFACE_G/version2/i3e}
+FILE_PATH_DBASE3=${FILE_PATH_DBASE3:-${FILE_PATH_DBASE}/N108/i3e}
+FILE_PATH_DBASE5=${FILE_PATH_DBASE5:-${FILE_PATH_DBASE}/SURFACE_L/EUROPEb_v1/i3e}
+FILE_PATH_DBASE6=${FILE_PATH_DBASE6:-${FILE_PATH_DBASE}/CLIM_G/version2/i3e}
+FILE_PATH_DBASE8=${FILE_PATH_DBASE8:-${FILE_PATH_DBASE}/CLIM_G/ozone/ascii}
+FILE_PATH_DBASE9=${FILE_PATH_DBASE9:-${FILE_PATH_DBASE}/CLIM_G/aerosols/ascii}
+
+FILE_DBASE3=${FILE_DBASE3:-${FILE_PATH_DBASE3}/N108_GL:N108_GL}
+FILE_DBASE6_geopot=${FILE_DBASE6_geopot:-${FILE_PATH_DBASE6}/rel_GL.gz:rel_GL.gz}
+FILE_DBASE2_veglai=${FILE_DBASE2_veglai:-${FILE_PATH_DBASE2}/vegMM_GL:veg_GL ${FILE_PATH_DBASE2}/laiMM_GL:lai_GL}
+FILE_DBASE5_veglai=${FILE_DBASE5_veglai:-${FILE_PATH_DBASE5}/veg_MM_HR:veg_HR ${FILE_PATH_DBASE5}/lai_MM_HR:lai_HR}
+FILE_DBASE6_soil=${FILE_DBASE6_soil:-${FILE_PATH_DBASE6}/tpl_MM_GL.gz:tsl_GL.gz ${FILE_PATH_DBASE6}/tpl_MM_GL.gz:tpl_GL.gz ${FILE_PATH_DBASE6}/wpl_MM_GL.gz:wsl_GL.gz ${FILE_PATH_DBASE6}/wpl_MM_GL.gz:wpl_GL.gz ${FILE_PATH_DBASE6}/snl_MM_GL.gz:snl_GL.gz}
+FILE_DBASE8=${FILE_DBASE8:-${FILE_PATH_DBASE8}/abc_quadra_MM:abc_coef}
+FILE_DBASE9=${FILE_DBASE9:-${FILE_PATH_DBASE9}/aero.tegen.mMM_GL:aero_GL}
 
 TEMPORAIRE=$TMPDIR
 
@@ -93,19 +128,19 @@ cd $TEMPORAIRE
 
 #=== Copying and transforming Namelists
 cp $NAMSFX EXSEG1.nam
-cp $NAMLIN ${CNMEXPL}_lin.nam
-cp $NAMQUAD ${CNMEXPL}_quad.nam
+cp $NAMLIN ${expname}_lin.nam
+cp $NAMQUAD ${expname}_quad.nam
 
 # Transform the namelist files by replacing placeholders with actual values
 sed \
  -e "s/__MBX_SIZE__/$MBX_SIZE/" \
  -e "s/__NTASKS__/1/" \
-${CNMEXPL}_lin.nam > namprovi
+${expname}_lin.nam > namprovi
 
 sed \
  -e "s/__MBX_SIZE__/$MBX_SIZE/" \
  -e "s/__NTASKS__/1/" \
-${CNMEXPL}_quad.nam > namprovi_quad
+${expname}_quad.nam > namprovi_quad
 
 #=== Creating all the namelist files for the different parts
 sed "s/ N923=0/ N923=1/" namprovi > namprovi_1_lin
@@ -131,17 +166,13 @@ rm namprovi namprovi_quad
 #=== Part 1: Quadratic and Linear
 echo "Part 1: Quadratic and Linear"
 cp ${FILE_PATH_DBASE1}/* .
-gzip -d Dh_over_Dx_Dh_over_Dy.gz
-gzip -d Dh_over_Dx_square.gz
-gzip -d Dh_over_Dy_square.gz
-gzip -d Hmax-HxH-Hmin_ov4.gz
-gzip -d Nb_Peaks.gz
-gzip -d Oro_Max.gz
-gzip -d Oro_Mean.gz
-gzip -d Oro_Min.gz
-gzip -d Sigma.gz
-gzip -d Urbanisation.gz
-gzip -d Water_Percentage.gz
+for file in $( ls *.gz ); do
+  gzip -d $file
+done
+
+if [[ -v LAROME ]] && $LAROME ; then
+  ln -s $PGD Neworog
+fi
 
 ln -s namprovi_1_quad fort.4
 ln -s $EXEARP arpege.exe
@@ -187,7 +218,11 @@ rm fort.4 *_GL
 
 #=== Part 3
 echo "Part 3"
-cp ${FILE_PATH_DBASE3}/N108_GL  N108_GL
+for files in ${FILE_DBASE3} ; do
+  forig=${files%:*} ; ftarg=${files#*:}
+  cp $forig $ftarg
+done
+
 for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
   cp  Const.Clim  Const.Clim.${MM}
 done
@@ -214,17 +249,24 @@ cp ${FILE_PATH_DBASE5}/vgx_HR  vgx_HR
 cp ${FILE_PATH_DBASE5}/alv_HR  alv_HR
 cp ${FILE_PATH_DBASE5}/z0v_HR  z0v_HR
 
-cp ${FILE_PATH_DBASE6}/rel_GL.gz  rel_GL.gz
-gzip -d  rel_GL.gz
+for files in ${FILE_DBASE6_geopot} ; do
+  forig=${files%:*} ; ftarg=${files#*:}
+  cp $forig $ftarg
+  if [[ "${forig: -3}" == ".gz" ]] ; then
+    gzip -d $ftarg
+  fi
+done
 
 for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     #=== Part 4
     echo "Part 4"
     mv  Const.Clim.${MM}  Const.Clim
-    cp ${FILE_PATH_DBASE2}/veg${MM}_GL  veg_GL
-    cp ${FILE_PATH_DBASE2}/lai${MM}_GL  lai_GL
-
+    for files in ${FILE_DBASE2_veglai} ; do
+      forig=${files%:*} ; ftarg=${files#*:}
+      forig=$( echo $forig | sed -e "s/MM/$MM/g" )
+      cp ${forig} $ftarg
+    done
     ln -s namprovi_4 fort.4
 
     ./arpege.exe
@@ -236,9 +278,11 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     #=== Part 5
     echo "Part 5"
-    cp ${FILE_PATH_DBASE5}/veg_${MM}_HR  veg_HR
-    cp ${FILE_PATH_DBASE5}/lai_${MM}_HR  lai_HR
-
+    for files in ${FILE_DBASE5_veglai} ; do
+      forig=${files%:*} ; ftarg=${files#*:}
+      forig=$( echo $forig | sed -e "s/MM/$MM/g" )
+      cp ${forig} $ftarg
+    done
     ln -s namprovi_5 fort.4
 
     ./arpege.exe
@@ -250,12 +294,16 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     #=== Part 6
     echo "Part 6"
-    cp ${FILE_PATH_DBASE6}/tpl_${MM}_GL.gz  tsl_GL.gz ; gzip -d  tsl_GL
-    cp ${FILE_PATH_DBASE6}/tpl_${MM}_GL.gz  tpl_GL.gz ; gzip -d  tpl_GL
-    cp ${FILE_PATH_DBASE6}/wpl_${MM}_GL.gz  wsl_GL.gz ; gzip -d  wsl_GL
-    cp ${FILE_PATH_DBASE6}/wpl_${MM}_GL.gz  wpl_GL.gz ; gzip -d  wpl_GL
-    cp ${FILE_PATH_DBASE6}/snl_${MM}_GL.gz  snl_GL.gz ; gzip -d  snl_GL
-
+    for files in ${FILE_DBASE6_soil} ; do
+      forig=${files%:*} ; ftarg=${files#*:}
+      forig=$( echo $forig | sed -e "s/MM/$MM/g" )
+      cp ${forig} $ftarg
+      if [[ "${ftarg: -4}" == ".tgz" ]] ; then
+        tar -xzf $ftarg
+      elif [[ "${ftarg: -3}" == ".gz" ]] ; then
+        gzip -d $ftarg
+      fi
+    done
     ln -s namprovi_6 fort.4
 
     ./arpege.exe
@@ -267,7 +315,11 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     #=== Part (--7-- nope) 8 : Ozone
     echo "Part 8 : Ozone"
-    cp ${FILE_PATH_DBASE8}/abc_quadra_${MM} abc_coef
+    for files in ${FILE_DBASE8} ; do
+      forig=${files%:*} ; ftarg=${files#*:}
+      forig=$( echo $forig | sed -e "s/MM/$MM/g" )
+      cp ${forig} $ftarg
+    done
 
     ln -s namprovi_8 fort.4
 
@@ -280,7 +332,11 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
 
     #=== Part 9 : Aerosols
     echo "Part 9 : Aerosols"
-    cp ${FILE_PATH_DBASE9}/aero.tegen.m${MM}_GL aero_GL
+    for files in ${FILE_DBASE9} ; do
+      forig=${files%:*} ; ftarg=${files#*:}
+      forig=$( echo $forig | sed -e "s/MM/$MM/g" )
+      cp ${forig} $ftarg
+    done
 
     ln -s namprovi_9 fort.4
 
@@ -292,9 +348,20 @@ for MM in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
     rm fort.4 aero_GL
 
     #=== Move the output file to the save directory
-    mv Const.Clim "${SAVEDIR}/clim_arpege.${GRID}r.m${MM}" 
+    mv Const.Clim "${SAVEDIR}/clim_arpege.${GRID}.m${MM}" 
 
 done
+
+if [[ -v LAROME ]] && $LAROME ; then
+  echo 'Replace orography from PGD file with Const.Clim orography' 
+# This is due to the different way of handling spectral orography in AROME: only 2/3 of the wavelength is used. This truncated spectral orography is calculated by the 923 conf, and needs to be put afterwards in the PGD.
+  source /home/gmgec/mrgo/haradercoustaue/venvs/epyvenv/bin/activate
+  $(python $EPY_ORO -c $SAVEDIR/clim_arpege.${GRID}.m01 -p $PGD)
+fi
+
+echo "CLIMDIR=$SAVEDIR">>$CONFIGFILE
+
+echo "Clims created and put in $SAVEDIR"
 
 #=========================================================================
 #===== End of execution
