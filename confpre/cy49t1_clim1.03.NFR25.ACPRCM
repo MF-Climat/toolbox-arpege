@@ -12,6 +12,7 @@ GRIDl=NFR2.5l60
 SAVEDIR=$workdir/arome/tests/${GRID}
 
 #=== Namelists
+NAMARPc927=/home/gmgec/mrgo/haradercoustaue/AROME49/NFR2.5/toolbox-arpege/namelist/atm/conf927_NFR3l60_cy49t1_clim1.04
 NAMSFX=/home/gmgec/mrgo/gevaudanm/arome/tests/${GRID}/namelist/sfx/nam.sfx.ARCM.${GRID}.cy49t1_clim1.03.rl.teb
 NAMSFXpgd=$NAMSFX ; NAMSFXc923=$NAMSFX ; NAMSFXc927=$NAMSFX
 NAMLIN=/home/gmgec/mrgo/gevaudanm/arome/tests/${GRID}/namelist/atm/nam923.${GRID}.cy49t1.lin
@@ -56,7 +57,13 @@ FILE_DBASE9="${FILE_PATH_DBASE9}/tegen.aerosols.01.ascii.mMM:aero_GL"
 LAROME=true
 EPY_ORO=$FILE_PATH_DBASE/scripts/epy_oro.py
 
+#=== Regional names for c927
+CNMEXP=FPOS
+SUFF=DEUR
+
+
 #=== PGD file (filled by job_pgd-prep ; necessary for standalone clim creation by job_c923)
 #=== + CLIMDIR (filled by job_c923 ; necessary for standalone atm restart creation by job_c927)
-PGD=/scratch/work/gevaudanm/arome/tests/NFR2.5/pgdprep/cy49t1_clim1.03.NFR25.ACPRCM/PGD.fa
-CLIMDIR=/scratch/work/gevaudanm/arome/tests/NFR2.5/c923/cy49t1_clim1.03.NFR25.ACPRCM
+PGD=/scratch/work/haradercoustaue/arome/tests/NFR2.5/pgdprep/cy49t1_clim1.03.NFR25.ACPRCM/PGD.fa
+CLIMDIR=/scratch/work/haradercoustaue/arome/tests/NFR2.5/c923/cy49t1_clim1.03.NFR25.ACPRCM
+@

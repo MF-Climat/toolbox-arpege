@@ -51,7 +51,7 @@ if [ $# -ne 0 ]; then
   exit 1
 fi
 
-expname=cy49t1_clim1.03_tl127r
+expname=cy49t1_clim1.03.tl127r
 if [ -s "$CONFIGFILE" ] ; then
   CONFIGFILE=$( realpath $CONFIGFILE )
   expname=$(basename $CONFIGFILE)
@@ -359,7 +359,13 @@ if [[ -v LAROME ]] && $LAROME ; then
   $(python $EPY_ORO -c $SAVEDIR/clim_arpege.${GRID}.m01 -p $PGD)
 fi
 
-echo "CLIMDIR=$SAVEDIR">>$CONFIGFILE
+
+if grep -q "^CLIMDIR=" $CONFIGFILE; then
+  sed -i -e "s|^CLIMDIR=.*|CLIMDIR=$SAVEDIR|" $CONFIGFILE
+else
+  echo "CLIMDIR=$SAVEDIR">>$CONFIGFILE
+fi
+
 
 echo "Clims created and put in $SAVEDIR"
 

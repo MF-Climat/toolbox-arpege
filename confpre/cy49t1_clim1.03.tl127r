@@ -26,3 +26,5 @@ FA_INITFILE=$resdir/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa
 
 #=== PGD file (filled by job_pgd-prep ; necessary for standalone clim creation by job_c923)
 #=== + CLIMDIR (filled by job_c923 ; necessary for standalone atm restart creation by job_c927)
+PGD=/scratch/work/haradercoustaue/pgdprep/cy49t1_clim1.03.tl127r/PGD.fa
+CLIMDIR=/scratch/work/haradercoustaue/c923/cy49t1_clim1.03.tl127r

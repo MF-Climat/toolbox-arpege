@@ -54,7 +54,7 @@ if [ $# -ne 0 ]; then
   exit 1
 fi
 
-expname=cy49t1_clim1.03_tl127r
+expname=cy49t1_clim1.03.tl127r
 if [ -s "$CONFIGFILE" ] ; then
   CONFIGFILE=$( realpath $CONFIGFILE )
   expname=$(basename $CONFIGFILE)

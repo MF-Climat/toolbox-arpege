@@ -41,7 +41,7 @@ if [ $# -ne 0 ]; then
   exit 1
 fi
 
-expname=cy49t1_clim1.03_tl127r
+expname=cy49t1_clim1.03.tl127r
 if [ -s "$CONFIGFILE" ] ; then
   CONFIGFILE=$( realpath $CONFIGFILE )
   expname=$(basename $CONFIGFILE)
@@ -105,7 +105,14 @@ ECOFILES=${ECOFILES:-$LFILES}
 if [ ! -r $SAVEDIR ]; then
   mkdir -p $SAVEDIR
 fi
-[ $LPGD -eq 1 ] && rm -f $SAVEDIR/P*.fa
+
+#===== Cleaning previous files if present
+# These options may need to evolve depending on test cases
+  
+[ $LPGD -eq 1 ] && rm -f $SAVEDIR/PGD.fa ||:
+rm -f $SAVEDIR/PREP.fa $SAVEDIR/drhook.prof_pgd $SAVEDIR/LISTING_PGD.txt $SAVEDIR/TRIP_PREP.nc ||:
+[ -d $SAVEDIR/data_trip ] && rm -f $SAVEDIR/data_trip/TRIP_PARAM.nc ||:
+[ -d $SAVEDIR/data_oasis ] && $SAVEDIR/data_oasis/areas.nc $SAVEDIR/data_oasis/grids.nc $SAVEDIR/data_oasis/masks.nc ||:  
 
 #=== Environement
 ulimit -s unlimited
@@ -190,14 +197,18 @@ if [[ $LPGD -ne 0 ]] ; then
 
    #=== Saving outputs
    mv PGD.fa  $SAVEDIR/PGD.fa
-   echo "PGD=$SAVEDIR/PGD.fa">>$CONFIGFILE
-   #mv PGD.nc  $SAVEDIR/PGD.nc
 
-  if [[ $DR_HOOK -ne 0 ]] ; then
-     mv drhook.prof.1 $SAVEDIR/drhook.prof_pgd
-     mv LISTING_PGD.txt $SAVEDIR/LISTING_PGD.txt
-  fi
+   if grep -q "^PGD=" $CONFIGFILE; then 
+      sed -i -e "s|^PGD=.*|PGD=$SAVEDIR/PGD.fa|" $CONFIGFILE 
+   else
+      echo "PGD=$SAVEDIR/PGD.fa">>$CONFIGFILE
+   fi 
 
+   if [[ $DR_HOOK -ne 0 ]] ; then
+      mv drhook.prof.1 $SAVEDIR/drhook.prof_pgd
+      mv LISTING_PGD.txt $SAVEDIR/LISTING_PGD.txt
+   fi
+ 
 fi
 
 
@@ -235,7 +246,6 @@ fi
 #=== Error catching
 if [[ $? -ne 0 ]] ; then
   echo "run prep failed !!! See in directory: ${TEMPORAIRE}"
-  #cat LISTING_PREP0.txt
   exit
 fi
 

@@ -8,11 +8,11 @@ EXEARP=$pack/MASTERODB
 GRID=NFR2.5
 GRIDl=NFR2.5l60
 
-#=== Output directory (prefix, completed by each different job, e.g. : $SAVEDIR/pgd-prep/$expname)
-SAVEDIR=$workdir/arome/${GRID}
+#=== Output directory: define SAVEDIR if wanted. Default : $workdir. Prefix, completed by each different job, e.g. : $SAVEDIR/pgd-prep/$expname
+SAVEDIR=$workdir/arome/tests/${GRID}
 
 #=== Namelists
-NAMARPc927=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/conf927_NFR3l60_cy49t1_clim1.04
+NAMARPc927=/home/gmgec/mrgo/haradercoustaue/AROME49/NFR2.5/toolbox-arpege/namelist/atm/conf927_NFR3l60_cy49t1_clim1.04
 NAMLIN=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/clim.${GRID}.cy49.lin
 NAMQUAD=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/clim.${GRID}.cy49.quad
 NAMSFX=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/sfx/nam.sfx.ARCM.${GRID}.cy49t1_clim1.04.rl.noteb
@@ -20,7 +20,9 @@ NAMSFXpgd=$NAMSFX ; NAMSFXc923=$NAMSFX ; NAMSFXc927=$NAMSFX
 
 
 #=== Restarts
-CLIMDIR=/home/gmgec/mrgo/haradercoustaue/AROME49/NFR2.5/clim
+resdir=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
+FA_PGDFILE=$resdir/PGD.AGCM.tl127r.cy49t1_clim1.03.fa
+CLIMDIR=/scratch/work/haradercoustaue/arome/tests/NFR2.5/c923/cy49t1_clim1.04.NFR25.ACPRCM
 
 #=== PGD Input Data
 ECODIR=/scratch/climat/APPS/regional_tools/preprocessing/pgd_data/cy49t1_clim-op1.01
@@ -62,5 +64,6 @@ SUFF=DEUR
 
 
 #=== PGD file (filled by job_pgd-prep ; necessary for standalone clim creation by job_c923)
-PGD=/scratch/work/haradercoustaue/cy49t1_clim1.04_NFR2.5/PGD.fa
-CLIMDIR=/home/gmgec/mrgo/haradercoustaue/AROME49/NFR2.5/clim
+#=== + CLIMDIR (filled by job_c923 ; necessary for standalone atm restart creation by job_c927
+PGD=/scratch/work/haradercoustaue/arome/tests/NFR2.5/pgdprep/cy49t1_clim1.04.NFR25.ACPRCM/PGD.fa
+CLIMDIR=/scratch/work/haradercoustaue/arome/tests/NFR2.5/c923/cy49t1_clim1.04.NFR25.ACPRCM
