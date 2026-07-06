@@ -11,13 +11,12 @@
 # Script for generation of RESTART files for ARPEGE-Climat v7.
 # Interpolation of Analysis or Forecast files towards the target horizontal and vertical grid.
 # Configuration 927.
-# sbatch <script-name>
+# sbatch <script-name> -c <config-file> (optional)
 # 03/2026 : Tested for TL49, TL127, TC127, TCO127
 
 # Load required modules and set environment variables
-set -x
 ulimit -s unlimited
-module purge
+module purge ||:
 module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
 export MKL_CBWR=AUTO,STRICT
 export OMP_STACKSIZE=4G
@@ -35,39 +34,73 @@ export KMP_AFFINITY="verbose,compact,granularity=fine"
 export KMP_BLOCKTIME=12
 export OMP_WAIT_POLICY=ACTIVE
 export EC_MEMINFO=0
-set +x
+
+
+
+while getopts "c:h?" flags ; do
+  case $flags in
+    c) CONFIGFILE=${OPTARG};;
+    h|?) echo -e "job_c927_cy49 takes one optional kwarg :\n -c config file "
+         exit 0;;
+    \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
+        exit 1;;
+  esac
+done
+
+shift $(($OPTIND-1));
+
+if [ $# -ne 0 ]; then
+  echo "Invalid argument(s) "$@
+  exit 1
+fi
+
+expname=cy49t1_clim1.03.tl127r
+if [ -s "$CONFIGFILE" ] ; then
+  CONFIGFILE=$( realpath $CONFIGFILE )
+  expname=$(basename $CONFIGFILE)
+  source $CONFIGFILE
+fi
+
+set -vx
 
 #=========================================================================
-#===== Configuration
+#===== Default Configuration
 #=========================================================================
+#
+# assuming the job has been lauch from the toolbox-arpege/pgd-prep directory
+TOOLBOX_DIR=$(pwd)/..
+#
 #=== Binaries
-PACK=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y
-EXEARP=$PACK/bin/MASTERODB
+EXEARP=${EXEARP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/MASTERODB}
 
 #=== Geometry and version
-GRID=tl127
-VLEV=l91
+GRID=${GRID:-tl127r}
+GRIDl=${GRIDl:-tl127l91r}
 
 #=== Namelists
-NAMDIR=~/toolbox-arpege/namelist
-NAMSFX=$NAMDIR/sfx/nam.sfx.${GRID}r.c927.cy49t1_clim1.03
-NAMARP=$NAMDIR/atm/nam.atm.${GRID}${VLEV}r.c927.cy49t1_clim1.03
+NAMSFX=${NAMSFXc927:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}.c927.cy49t1_clim1.03}
+NAMARP=${NAMARPc927:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_clim1.03}
 
 #=== Restarts
 # Initial conditions and climatologies :
-SRCDIR=/scratch/climat/daac-dev/data/927N
+SRCDIR=${SRCDIR:-/scratch/climat/daac-dev/data/927N}
 # Target climatologies - to build it, check c923 - :
-CLIMDIR=/scratch/climat/daac-dev/data/927N
+CLIMDIR=${CLIMDIR:-/scratch/climat/daac-dev/data/927N}
 
-#=== SAVE directory and experiment name
-CNMEXPL=cy49t1_clim1.03_${GRID}${VLEV}r
-SAVEDIR=/scratch/work/${USER}/c927/${CNMEXPL}
-mkdir -p $SAVEDIR
-rm -f $SAVEDIR/*
+#=== Common code filenames for CIs and LBCs 
+CNMEXP=${CNMEXP:-ARPE}
+SUFF=${SUFF:-000}
+
+#=== Output directory
+SAVEDIR=${SAVEDIR:-$workdir} ; SAVEDIR=$SAVEDIR/c927/$expname
 
 #=========================================================================
 #===== End of main configuration elements
 #=========================================================================
+if [ ! -r $SAVEDIR ]; then
+  mkdir -p $SAVEDIR
+fi
+rm -f $SAVEDIR/*PF*
 
 #=== Define constants and paths
 # Path
@@ -100,20 +133,24 @@ sed \
 namprovi > fort.4
 rm namprovi
 
-
 #=========================================================================
 #===== Execution of the interpolation
 #=========================================================================
 
 #=== Get the input files
 # Initial conditions:
-cp ${SRCDIR}/analyse.20161002r0 ICMSHARPEINIT
+cp ${SRCDIR}/analyse.20161002r0 ICMSH${CNMEXP}INIT
 
+# Initial conditions:
+
+# Copy climatologies to expected names. This differs between regional and global 
+ln -sf ICMSH${CNMEXP}INIT ICMSH${CNMEXP}+0000 
 # Departure climatologies:
 cp ${SRCDIR}/clim_arpege.tl1198.01.m10 Const.Clim
-
+cp ${SRCDIR}/clim_arpege.tl1198.01.m11 Const.Clim_next 
 # Arrival climatologies:
-cp ${CLIMDIR}/clim_arpege.${GRID}r.m10 const.clim.000
+cp ${CLIMDIR}/clim_arpege.${GRID}.m10 const.clim.${SUFF}
+cp ${CLIMDIR}/clim_arpege.${GRID}.m11 const.clim.${SUFF}_next
 
 #=== Get the binaries and run the model
 cp $EXEARP arpege.exe
@@ -123,4 +160,4 @@ codrep=$?
 if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED'; exit 1; fi
 
 #=== Move the output files to the save directory
-mv PFARPE000+0000 $SAVEDIR/${CNMEXPL}__PFARPE000+0000
+mv PF${CNMEXP}${SUFF}+0000 $SAVEDIR/${expname}__PF${CNMEXP}000+0000

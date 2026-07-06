@@ -1,0 +1,30 @@
+#=== Binaries
+pack=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin
+EXEPGD=$pack/PGD
+EXEPREP=$pack/PREP
+EXEARP=$pack/MASTERODB
+
+#=== Geometry
+GRID=tl127r
+GRIDl=tl127l91r
+
+#=== Output directory: define SAVEDIR if wanted. Default : $workdir. Prefix, completed by each different job, e.g.: $SAVEDIR/pgd-prep/$expname
+
+#=== Namelists
+TOOLBOX_DIR=~voldoire/SAVE/arpege
+NAMSFXpgd=${TOOLBOX_DIR}/toolbox-arpege/namelist/sfx/nam.sfx.${GRID}.pgd.cy49t1_clim1.03
+NAMSFXc923=${TOOLBOX_DIR}/toolbox-arpege/namelist/sfx/nam.sfx.${GRID}.c923.cy49t1_clim1.03
+NAMSFXc927=${TOOLBOX_DIR}/toolbox-arpege/namelist/sfx/nam.sfx.${GRID}.c927.cy49t1_clim1.03
+NAMLIN=${TOOLBOX_DIR}/toolbox-arpege/namelist/atm/nam.atm.${GRIDl}.c923.cy49t1_clim1.03.lin
+NAMQUAD=${TOOLBOX_DIR}/toolbox-arpege/namelist/atm/nam.atm.${GRIDl}.c923.cy49t1_clim1.03.quad
+NAMARPc927=${TOOLBOX_DIR}/toolbox-arpege/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_clim1.03
+
+#=== Restarts
+resdir=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
+FA_PGDFILE=$resdir/PGD.AGCM.tl127r.cy49t1_clim1.03.fa
+FA_INITFILE=$resdir/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa
+
+#=== PGD file (filled by job_pgd-prep ; necessary for standalone clim creation by job_c923)
+#=== + CLIMDIR (filled by job_c923 ; necessary for standalone atm restart creation by job_c927)
+PGD=/scratch/work/haradercoustaue/pgdprep/cy49t1_clim1.03.tl127r/PGD.fa
+CLIMDIR=/scratch/work/haradercoustaue/c923/cy49t1_clim1.03.tl127r
