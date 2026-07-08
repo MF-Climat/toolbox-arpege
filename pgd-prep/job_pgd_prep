@@ -48,26 +48,26 @@ LTRIP=${LTRIP:-0}
 #=== Binaries
 EXEPGD=${EXEPGD:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PGD}
 EXEPREP=${EXEPREP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PREP}
-EXETRIP=$EXETRIP
+EXETRIP=${EXETRIP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/TRIP_PREP}
 
 #=== Namelists
 SFXNAM=${SFXNAM:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.pgd.cy49t1_clim1.03}
-TRIPNAML=${TRIPNAML}
+TRIPNAML=${TRIPNAML:-${TOOLBOX_DIR}/namelist/riv/nam.riv.05deg.prep.cy49t1_clim1.03}
 OASISNAML=${OASISNAML:-${TOOLBOX_DIR}/namelist/cpl/namcouple.prep} # Empty namelist, just needed for OASIS
 
 #=== Restarts
 FA_PGDFILE=${FA_PGDFILE:-/scratch/climat/CEDRE/restart/sfx/tl127r/v7/PGD.AGCM.tl127r.cy49t1_clim1.03.fa}
 FA_INITFILE=${FA_INITFILE:-/scratch/climat/CEDRE/restart/sfx/tl127r/v7/rst.sfx.AGCM.tl127r.cy49t1_clim1.03.19790101.fa}
-TRIP_INITFILE=$TRIP_INITFILE
+TRIP_INITFILE=${TRIP_INITFILE:-/scratch/climat/CEDRE/restart/riv/riv05/v7/rst.trp.AGCM.riv05.nc}
 
 #=== Output directory
 SAVEDIR=${SAVEDIR:-$workdir/surfex/pgdprep/$expname}
 
 #=== Constants files and directory sources
-ECODIR=${ECODIR:-/home/cnrm_other/ge/mrmm/decharme/ecoclimap_cnrm_cm6.02}
-FRACDIR=${FRACDIR:-/scratch/work/roehrig/sfx/ecoclimap/46t1} # for frac_*.asc
-TRIPDIR=${TRIPDIR:-$ECODIR}
-GRIB_INITFILE=$ECODIR/restart_grib/GRIDSURFARP.tl127l31r
+ECODIR=${ECODIR:-/scratch/climat/CMIP6/data/sfx}
+SFX9DIR=${SFX9DIR:-/scratch/climat/CEDRE/data/sfx/miscellaneaous/v7}
+FRACDIR=$FRACDIR # frac_*.asc - not used for the moment
+TRIPDIR=${TRIPDIR:-/scratch/climat/CEDRE/data/riv/riv05_v7}
 
 #=========================================================================
 #===== End of main configuration elements
@@ -137,8 +137,8 @@ if [[ $LPGD -ne 0 ]] ; then
    ln -s $ECODIR/gmted1km.dir topo.dir
    ln -s $ECODIR/gmted1km.hdr topo.hdr
 
-   ln -s /home/gmgec/mrgu/hardouinl/ga2_ti/ga2_topo_index.dir topo_index.dir
-   ln -s /home/gmgec/mrgu/hardouinl/ga2_ti/ga2_topo_index.hdr topo_index.hdr
+   ln -s $SFX9DIR/ga2_topo_index.dir topo_index.dir
+   ln -s $SFX9DIR/ga2_topo_index.hdr topo_index.hdr
 
    ln -s $ECODIR/ECOCLIMAP_II_EUROP_V2.4.dir ecoclimap.dir
    ln -s $ECODIR/ECOCLIMAP_II_EUROP_V2.4.hdr ecoclimap.hdr
@@ -202,7 +202,6 @@ if [[ $LTRIP -ne 0 ]] ; then
 fi
 
 #=== Copying restart and PGD
-ln -s $GRIB_INITFILE restart_atm
 ln -s $FA_PGDFILE restart_sfx_pgd.fa
 ln -s $FA_INITFILE restart_sfx.fa
 
@@ -219,7 +218,7 @@ fi
 #=== Error catching
 if [[ $? -ne 0 ]] ; then
   echo "run prep failed !!! See in directory: ${TEMPORAIRE}"
-  #cat LISTING_PREP0.txt
+  cat LISTING_PREP0.txt
   exit
 fi
 
