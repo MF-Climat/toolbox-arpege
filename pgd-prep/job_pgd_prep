@@ -50,8 +50,13 @@ EXEPGD=${EXEPGD:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PGD}
 EXEPREP=${EXEPREP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PREP}
 EXETRIP=${EXETRIP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/TRIP_PREP}
 
+#=== Restart dates for PREP and c927 initial conditions 
+NYEAR=${NYEAR:-1970}                
+NMONTH=${NMONTH:-1}
+NDAY=${NDAY:-1}  
+
 #=== Namelists
-NAMSFX=${NAMSFX:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.pgd.cy49t1_clim1.03}
+NAMSFX=${NAMSFX:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.cy49t1_clim1.03}
 NAMSFXpgd=${NAMSFXpgd:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.pgd.cy49t1_clim1.03}
 TRIPNAML=${TRIPNAML:-${TOOLBOX_DIR}/namelist/riv/nam.riv.05deg.prep.cy49t1_clim1.03}
 OASISNAML=${OASISNAML:-${TOOLBOX_DIR}/namelist/cpl/namcouple.prep} # Empty namelist, just needed for OASIS
@@ -67,8 +72,7 @@ SAVEDIR=${SAVEDIR:-$workdir/surfex/pgdprep/$expname}
 
 #=== Constants files and directory sources
 ECODIR=${ECODIR:-/scratch/climat/CMIP6/data/sfx}
-ECOFILES_PROTO="${ECODIR}/gmted1km.dir:topo.dir ${ECODIR}/gmted1km.hdr:topo.hdr $ECODIR/ECOCLIMAP_II_EUROP_V2.4.dir:ecoclimap.dir $ECODIR/ECOCLIMAP_II_EUROP_V2.4.hdr:ecoclimap.hdr $ECODIR/LAKE_DEPTH_ECO_II_V2.4.dir:lake_depth.dir $ECODIR/LAKE_DEPTH_ECO_II_V2.4.hdr:lake_depth.hdr $ECODIR/CLAY_HWSD_MOY_v2.dir:clay.dir $ECODIR/CLAY_HWSD_MOY_v2.hdr:clay.hdr $ECODIR/SAND_HWSD_MOY_v2.dir:sand.dir $ECODIR/SAND_HWSD_MOY_v2.hdr:sand.hdr $ECODIR/soc_sub.dir:soc_sub.dir $ECODIR/soc_sub.dir:soc_sub.hdr $ECODIR/soc_top.dir:soc_top.dir $ECODIR/soc_top.dir:soc_top.hdr $ECODIR/perm_glo_10km.dir:perm_glo_10km.dir $ECODIR/perm_glo_10km.hdr:perm_glo_10km.hdr"
- 
+ECOFILES_PROTO="${ECODIR}/gmted1km.dir:topo.dir ${ECODIR}/gmted1km.hdr:topo.hdr $ECODIR/ECOCLIMAP_II_EUROP_V2.4.dir:ecoclimap.dir $ECODIR/ECOCLIMAP_II_EUROP_V2.4.hdr:ecoclimap.hdr $ECODIR/LAKE_DEPTH_ECO_II_V2.4.dir:lake_depth.dir $ECODIR/LAKE_DEPTH_ECO_II_V2.4.hdr:lake_depth.hdr $ECODIR/CLAY_HWSD_MOY_v2.dir:clay.dir $ECODIR/CLAY_HWSD_MOY_v2.hdr:clay.hdr $ECODIR/SAND_HWSD_MOY_v2.dir:sand.dir $ECODIR/SAND_HWSD_MOY_v2.hdr:sand.hdr $ECODIR/soc_sub.dir:soc_sub.dir $ECODIR/soc_sub.hdr:soc_sub.hdr $ECODIR/soc_top.dir:soc_top.dir $ECODIR/soc_top.hdr:soc_top.hdr $ECODIR/perm_glo_10km.dir:perm_glo_10km.dir $ECODIR/perm_glo_10km.hdr:perm_glo_10km.hdr ${ECODIR}/ecoclimapI_covers_param.bin:ecoclimapI_covers_param.bin ${ECODIR}/ecoclimapII_eu_covers_param.bin:ecoclimapII_eu_covers_param.bin"
 SFX9DIR=${SFX9DIR:-/scratch/climat/CEDRE/data/sfx/miscellaneaous/v7}
 ECOFILES_PROTO+=" $SFX9DIR/ga2_topo_index.dir:topo_index.dir $SFX9DIR/ga2_topo_index.hdr:topo_index.hdr"
 FRACDIR=$FRACDIR # frac_*.asc - not used for the moment
@@ -76,6 +80,10 @@ TRIPDIR=${TRIPDIR:-/scratch/climat/CEDRE/data/riv/riv05_v7}
 
 ECOFILES=${ECOFILES:-$ECOFILES_PROTO}
 
+
+#== PGD and PREP savefiles
+PGD=${PGD:-$SAVEDIR/PGD.fa}
+PREP=${PREP:-$SAVEDIR/PREP.fa}
 
 #=========================================================================
 #===== End of main configuration elements
@@ -145,9 +153,12 @@ if [[ $LPGD -ne 0 ]] ; then
    echo " copie de la namelist surfex"
    cp $NAMSFXpgd OPTIONS.nam
 
+   # Modify namelist for user date just in case, this isn't necessary for the pgd step
+   sed -i -e "s/NYEAR.*=.*/NYEAR=${NYEAR},/" -e "s/NMONTH.*=.*/NMONTH=${NMONTH},/" -e "s/NDAY.*=.*/NDAY=${NDAY},/" OPTIONS.nam
+
    # nat/sea/wat fraction files to follow nemo land/sea mask - if not used in the namelist and not present here -> no pb
    ln -s  $FRACDIR/frac_???.asc .
-   ln -s /scratch/work/haradercoustaue/arome/tests/NFR2.5/c923/cy49t1_clim1.04.NFR25.ACPRCM/clim_arpege.NFR2.5.m01 const.clim
+   
    #for vegtype in `seq 1 1 19` ; do
    #  [ ${LUYEAR} -gt 0 ] && ln -s ${LULUCCF}/vegtype${vegtype}_1d_60S-90N_cmip6_official_LUH2_GCP2023_lulccf_on_ecoclimap_${LUYEAR}.txt pft${vegtype}.txt
    #done
@@ -165,7 +176,10 @@ if [[ $LPGD -ne 0 ]] ; then
    fi
 
    #=== Saving outputs
-   mv PGD.fa $SAVEDIR/. 
+   if [ ! -d ${PGD%%PGD.fa} ]; then 
+      mkdir -p ${PGD%%PGD.fa}
+   fi 
+   mv PGD.fa $PGD 
 
   if [[ $DR_HOOK -ne 0 ]] ; then
      mv drhook.prof.1 $SAVEDIR/drhook.prof_pgd
@@ -182,8 +196,11 @@ fi
 echo " !!!!!!!!!! PREP CASE !!!!!!!! "
 
 #=== Copying Namelist
-echo " copie de la namelist surfex"
-cp $NAMSFX OPTIONS.nam
+echo " Make a copy of the surfex namelist"
+#cp $NAMSFXpgd OPTIONS.nam
+
+# Modify namelist for user date
+#sed -i -e "s/NYEAR.*=.*/NYEAR=${NYEAR},/" -e "s/NMONTH.*=.*/NMONTH=${NMONTH},/" -e "s/NDAY.*=.*/NDAY=${NDAY},/" OPTIONS.nam
 
 #=== TRIP option
 if [[ $LTRIP -ne 0 ]] ; then
@@ -199,11 +216,11 @@ fi
 ln -s $FA_PGDFILE restart_sfx_pgd.fa
 ln -s $FA_INITFILE restart_sfx.fa
 
-ln -s $SAVEDIR/PGD.fa PGD.fa
+ln -s $PGD PGD.fa
 
 #=== Copying ts clim 
 # Arrival climatologies:
-cp ${CLIMDIR}/clim_arpege.${GRID}.m10 const.clim
+#cp ${CLIMDIR}/clim_arpege.${GRID}.$(printf "%02.0f" $NMONTH) const.clim
 
 echo " copie et execution du prep "
 ln -s $EXEPREP prep.exe
@@ -221,7 +238,11 @@ if [[ $? -ne 0 ]] ; then
 fi
 
 #=== Saving output
-mv PREP.fa  $SAVEDIR/.
+if [ ! -d ${PREP%%PREP.fa} ]; then
+      mkdir -p ${PREP%%PREP.fa}
+fi
+
+mv PREP.fa  $PREP
 
 if [[ $LTRIP -ne 0 ]] ; then
    mv TRIP_PREP.nc $SAVEDIR/.
