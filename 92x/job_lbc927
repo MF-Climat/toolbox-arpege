@@ -74,11 +74,13 @@ TOOLBOX_DIR=$(pwd)/..
 EXEARP=${EXEARP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/MASTERODB}
 
 #=== Geometry and version
-GRID=${GRID:-tl127r}
+GRID=${GRID:-tl127}
 GRIDl=${GRIDl:-tl127l91r}
+# Departure grid 
+GRIDdep=${GRIDdep:-tl1198.01}
 
 #=== Namelists
-NAMSFX=${NAMSFXc927:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}.c927.cy49t1_clim1.03}
+NAMSFX=${NAMSFXc927:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}r.c927.cy49t1_clim1.03}
 NAMARP=${NAMARPc927:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_clim1.03}
 
 #=== Restarts
@@ -86,6 +88,13 @@ NAMARP=${NAMARPc927:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_cl
 SRCDIR=${SRCDIR:-/scratch/climat/daac-dev/data/927N}
 # Target climatologies - to build it, check c923 - :
 CLIMDIR=${CLIMDIR:-/scratch/climat/daac-dev/data/927N}
+# Restart on departure grid 
+INITFIL=${INITFIL:-analyse.20161002r0}
+
+#=== Dates  
+NYEAR=${NYEAR:-1970}
+NMONTH=${NMONTH:-1}
+NDAY=${NDAY:-1}
 
 #=== Common code filenames for CIs and LBCs 
 CNMEXP=${CNMEXP:-ARPE}
@@ -122,6 +131,28 @@ cd $TEMPORAIRE
 #=== Copying and transforming Namelists
 cp $NAMSFX EXSEG1.nam
 cp $NAMARP namprovi
+cp $TOOLBOX_DIR/tools/xpnam . 
+
+cat >nambit<<'EOR' 
+&NAMRIP0
+  NINDAT = ${NYEAR}${NMONTH}${NDAY}, 
+/
+EOR 
+
+cat >nambitsfx<<'EOR' 
+&NAM_PREP_SURF_ATM     NYEAR  = ${NYEAR}            ,
+                       NMONTH = ${NMONTH}           ,
+                       NDAY   = ${NDAY}             ,
+                       XTIME  = 0.                  ,
+/
+EOR 
+
+xpnam -i --rmblock=NAMRIP0 namprovi
+xpnam -i --dfile=nambit namprovi  
+
+xpnam -i --rmblock=NAM_PREP_SURF_ATM EXSEG1.nam
+xpnam -i --dfile=nambitsfx EXSEG1.nam  
+
 
 # Transform the namelist files by replacing placeholders with actual values
 sed \
@@ -145,12 +176,15 @@ cp ${SRCDIR}/analyse.20161002r0 ICMSH${CNMEXP}INIT
 
 # Copy climatologies to expected names. This differs between regional and global 
 ln -sf ICMSH${CNMEXP}INIT ICMSH${CNMEXP}+0000 
+# Get clim dates 
+MONCT=$(date --date="$(date +${NYEAR}-${NMONTH}-${NDAY})" +"%m")
+MONNXT=$(date --date="$(date +${NYEAR}-${NMONTH}-${NDAY}) +1 month" +"%m")
 # Departure climatologies:
-cp ${SRCDIR}/clim_arpege.tl1198.01.m10 Const.Clim
-cp ${SRCDIR}/clim_arpege.tl1198.01.m11 Const.Clim_next 
+cp ${SRCDIR}/clim_arpege.${GRIDdep}.m${MONCT} Const.Clim
+cp ${SRCDIR}/clim_arpege.${GRIDdep}.m${MONNXT} Const.Clim_next 
 # Arrival climatologies:
-cp ${CLIMDIR}/clim_arpege.${GRID}.m10 const.clim.${SUFF}
-cp ${CLIMDIR}/clim_arpege.${GRID}.m11 const.clim.${SUFF}_next
+cp ${CLIMDIR}/clim_arpege.${GRID}.m${MONCT} const.clim.${SUFF}
+cp ${CLIMDIR}/clim_arpege.${GRID}.m${MONNXT} const.clim.${SUFF}_next
 
 #=== Get the binaries and run the model
 cp $EXEARP arpege.exe
