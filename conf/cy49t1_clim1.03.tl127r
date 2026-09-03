@@ -1,5 +1,5 @@
 #=== Location of namelists for toolbox 
-TOOLBOX_DIR=/home/gmgec/mrgi/voldoire/SAVE/arpege/ 
+TOOLBOX_DIR=/home/gmgec/mrgi/voldoire/SAVE/arpege/toolbox-arpege
 
 #=== Binaries
 pack=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin
@@ -20,8 +20,8 @@ NDAY=2
 SAVEDIR=$workdir/arome/tests/${GRID}
 
 #=== Namelists
-NAMSFX=$TOOLBOX_DIR/toolbox-arpege/namelist/sfx/nam.sfx.${GRID}r.cy49t1_clim1.03
-NAMSFXpgd=$TOOLBOX_DIR/toolbox-arpege/namelist/sfx/nam.sfx.${GRID}r.pgd.cy49t1_clim1.03
+NAMSFX=$TOOLBOX_DIR/namelist/sfx/nam.sfx.${GRID}r.cy49t1_clim1.03
+NAMSFXpgd=$TOOLBOX_DIR/namelist/sfx/nam.sfx.${GRID}r.pgd.cy49t1_clim1.03
 
 #=== Restarts
 resdir=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
