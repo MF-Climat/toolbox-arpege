@@ -195,13 +195,6 @@ fi
 
 echo " !!!!!!!!!! PREP CASE !!!!!!!! "
 
-#=== Copying Namelist
-echo " Make a copy of the surfex namelist"
-#cp $NAMSFXpgd OPTIONS.nam
-
-# Modify namelist for user date
-#sed -i -e "s/NYEAR.*=.*/NYEAR=${NYEAR},/" -e "s/NMONTH.*=.*/NMONTH=${NMONTH},/" -e "s/NDAY.*=.*/NDAY=${NDAY},/" OPTIONS.nam
-
 #=== TRIP option
 if [[ $LTRIP -ne 0 ]] ; then
    ln -s $TRIPDIR/TRIP_PGD_HD.nc .

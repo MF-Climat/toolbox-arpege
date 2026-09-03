@@ -1,5 +1,5 @@
 #=== Binaries
-pack=/scratch/work/haradercoustaue/packs/CY49T1_clim1.04.debug.IMPIIFC2302DP.y/bin
+pack=/home/gmgec/mrgo/lenobler/packs/arome_v7.4.IMPIIFC2302DP.y/bin
 EXEPGD=$pack/PGD
 EXEPREP=$pack/PREP
 EXEARP=$pack/MASTERODB
@@ -8,6 +8,11 @@ EXEARP=$pack/MASTERODB
 GRID=NFR2.5
 GRIDl=NFR2.5l60
 
+#=== Dates for surface and atmosphere restarts
+NYEAR=2019
+NMONTH=2
+NDAY=15
+
 #=== Output directory: define SAVEDIR if wanted. Default : $workdir. Prefix, completed by each different job, e.g. : $SAVEDIR/pgd-prep/$expname
 SAVEDIR=$workdir/arome/tests/${GRID}
 
@@ -15,7 +20,7 @@ SAVEDIR=$workdir/arome/tests/${GRID}
 NAMARPc927=/home/gmgec/mrgo/haradercoustaue/AROME49/NFR2.5/toolbox-arpege/namelist/atm/conf927_NFR3l60_cy49t1_clim1.04
 NAMLIN=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/clim.${GRID}.cy49.lin
 NAMQUAD=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/atm/clim.${GRID}.cy49.quad
-NAMSFX=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/sfx/nam.sfx.ARCM.${GRID}.cy49t1_clim1.04.rl.noteb
+NAMSFX=/home/gmgec/mrgo/haradercoustaue/SAVE/namelist/sfx/nam_sfx_cy49.nml
 NAMSFXpgd=$NAMSFX ; NAMSFXc923=$NAMSFX ; NAMSFXc927=$NAMSFX
 
 
@@ -26,12 +31,13 @@ CLIMDIR=/scratch/work/haradercoustaue/arome/tests/NFR2.5/c923/cy49t1_clim1.04.NF
 
 #=== PGD Input Data
 ECODIR=/scratch/climat/APPS/regional_tools/preprocessing/pgd_data/cy49t1_clim-op1.01
-ECOFILEScst="${ECODIR}/ecoclimapI_covers_param.08.bin:ecoclimapI_covers_param.bin ${ECODIR}/ecoclimapII_eu_covers_param.08.bin:ecoclimapII_eu_covers_param.bin ${ECODIR}/ecoclimapII_af_covers_param.08.bin:ecoclimapII_af_covers_param.bin"
-ECOFILES="${ECODIR}/orography.gmted2010_07s5.01.dir:topo.dir ${ECODIR}/orography.gmted2010_07s5.01.hdr:topo.hdr"
+ECOFILES="${ECODIR}/ecoclimapI_covers_param.08.bin:ecoclimapI_covers_param.bin ${ECODIR}/ecoclimapII_eu_covers_param.08.bin:ecoclimapII_eu_covers_param.bin ${ECODIR}/ecoclimapII_af_covers_param.08.bin:ecoclimapII_af_covers_param.bin"
+ECOFILES+=" ${ECODIR}/orography.gmted2010_07s5.01.dir:topo.dir ${ECODIR}/orography.gmted2010_07s5.01.hdr:topo.hdr"
 ECOFILES+=" ${ECODIR}/ecoclimap_i.v1_8.02.dir:ecoclimap.dir ${ECODIR}/ecoclimap_i.v1_8.02.hdr:ecoclimap.hdr"
 ECOFILES+=" ${ECODIR}/lake_depth_eco_i_v1.7.dir:lake_depth.dir ${ECODIR}/lake_depth_eco_i_v1.7.hdr:lake_depth.hdr"
 ECOFILES+=" ${ECODIR}/hwsd.clay_v2.02.dir:clay.dir ${ECODIR}/hwsd.clay_v2.02.hdr:clay.hdr"
 ECOFILES+=" ${ECODIR}/hwsd.sand_v2.02.dir:sand.dir ${ECODIR}/hwsd.sand_v2.02.hdr:sand.hdr"
+ECOFILES+=" /scratch/climat/CEDRE/data/sfx/miscellaneaous/v7/ga2_topo_index.dir:topo_index.dir /scratch/climat/CEDRE/data/sfx/miscellaneaous/v7/ga2_topo_index.hdr:topo_index.hdr"
 
 #=== Paths for clim data
 FILE_PATH_DBASE=/scratch/climat/APPS/regional_tools/preprocessing/923_data/cy49t1_clim-op1.01
@@ -66,4 +72,5 @@ SUFF=DEUR
 #=== PGD file (filled by job_pgd-prep ; necessary for standalone clim creation by job_c923)
 #=== + CLIMDIR (filled by job_c923 ; necessary for standalone atm restart creation by job_c927
 PGD=/scratch/work/haradercoustaue/arome/tests/NFR2.5/pgdprep/cy49t1_clim1.04.NFR25.ACPRCM/PGD.fa
+PREP=/scratch/work/haradercoustaue/arome/tests/NFR2.5/pgdprep/cy49t1_clim1.04.NFR25.ACPRCM/PREP.fa
 CLIMDIR=/scratch/work/haradercoustaue/arome/tests/NFR2.5/c923/cy49t1_clim1.04.NFR25.ACPRCM
