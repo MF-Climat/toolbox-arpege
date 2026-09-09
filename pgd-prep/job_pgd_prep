@@ -51,7 +51,11 @@ EXEPREP=${EXEPREP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/PRE
 EXETRIP=${EXETRIP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/TRIP_PREP}
 
 #=== Namelists
-SFXNAM=${SFXNAM:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.pgd.cy49t1_clim1.03}
+SFXNAM=${SFXNAMpgd:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.tl127r.pgd.cy49t1_clim1.03}
+
+echo 'CONFIGFILE' $CONFIGFILE
+echo 'SFXNAM' $SFXNAM
+
 TRIPNAML=${TRIPNAML:-${TOOLBOX_DIR}/namelist/riv/nam.riv.05deg.prep.cy49t1_clim1.03}
 OASISNAML=${OASISNAML:-${TOOLBOX_DIR}/namelist/cpl/namcouple.prep} # Empty namelist, just needed for OASIS
 
@@ -61,7 +65,7 @@ FA_INITFILE=${FA_INITFILE:-/scratch/climat/CEDRE/restart/sfx/tl127r/v7/rst.sfx.A
 TRIP_INITFILE=${TRIP_INITFILE:-/scratch/climat/CEDRE/restart/riv/riv05/v7/rst.trp.AGCM.riv05.nc}
 
 #=== Output directory
-SAVEDIR=${SAVEDIR:-$workdir/surfex/pgdprep/$expname}
+SAVEDIR=${SAVEDIR:-$workdir} ; SAVEDIR=$SAVEDIR/pgd-prep/$expname
 
 #=== Constants files and directory sources
 ECODIR=${ECODIR:-/scratch/climat/CMIP6/data/sfx}
@@ -210,7 +214,7 @@ ln -s $SAVEDIR/PGD.fa PGD.fa
 echo " copie et execution du prep "
 ln -s $EXEPREP prep.exe
 if [[ $LTRIP -ne 0 ]] ; then
-   mpirun -np 1 prep.exe : -np 1 trip_prep.exe
+   mpirun -np 1 ./prep.exe : -np 1 ./trip_prep.exe
 else
    ./prep.exe
 fi

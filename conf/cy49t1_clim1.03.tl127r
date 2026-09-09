@@ -1,13 +1,15 @@
 grid=tl127
-TOOLBOX_DIR=~voldoire/SAVE/arpege 
+gridl=tl127l91r
+TOOLBOX_DIR=~voldoire/SAVE/arpege
 
 #=== Binaries
 pack=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin
+EXEARP=$pack/MASTERODB
 EXEPGD=$pack/PGD
 EXEPREP=$pack/PREP
 
 #=== Namelists
-SFXNAM=$TOOLBOX_DIR/toolbox-arpege/namelist/sfx/nam.sfx.${grid}r.pgd.cy49t1_clim1.03
+SFXNAMpgd=$TOOLBOX_DIR/toolbox-arpege/namelist/sfx/nam.sfx.${grid}r.pgd.cy49t1_clim1.03
 
 #=== Restarts
 resdir=/scratch/climat/CEDRE/restart/sfx/tl127r/v7
