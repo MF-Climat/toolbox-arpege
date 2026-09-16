@@ -1,0 +1,226 @@
+#!/bin/bash
+JOB=$WORK/[MNEMO][DATE]
+cat >$JOB <<'EOJ'
+#MTOOL autolog
+#MTOOL autoclean
+#MTOOL set host=belenos
+#MTOOL setconf files=targets.[this:host]
+#MTOOL set jobname=[MNEMO][DATE]
+#MTOOL set jobtag=[MNEMO][DATE]
+#MTOOL set nnp=60
+#MTOOL set nn=1
+#MTOOL set nthreads=1
+#MTOOL set logtarget=[this:frontend]
+
+#
+#
+# Script for generation of RESTART files for ARPEGE-Climat v7.
+# Interpolation of Analysis or Forecast files towards the target horizontal and vertical grid.
+# Configuration 927.
+# sbatch <script-name> -c <config-file> (optional)
+# 03/2026 : Tested for TL49, TL127, TC127, TCO127
+#
+#
+#
+
+#MTOOL profile target=[this:frontend]
+#SBATCH --job-name [this:jobname]
+#SBATCH --partition=transfert 
+#SBATCH --nodes=1         
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=04:00:00   
+#SBATCH --mem=6Gb
+#MTOOL end
+
+set -ex
+
+# Working directory
+cd ${FTDIR:=/scratch/utmp/ftdir/$USER}
+
+#MTOOL common join=ftget
+mkdir [MNEMO] || :
+#MTOOL common
+# Get current date from MTOOL
+DATEIN=[DATE]
+MM=${DATEIN:4:2}
+YYYY=${DATEIN:0:4}
+cd [MNEMO]
+#MTOOL common join=ftget
+#MTOOL common
+set -evx
+export NNP=1
+export NN=1
+export NTHREADS=1
+#MTOOL export NNP=[this:nnp]
+#MTOOL export NN=[this:nn]
+#MTOOL export NTHREADS=[this:nthreads]
+export NPROC=$(($NN*$NNP))
+
+#MTOOL common join=ftget
+
+
+# Retrieve restart files
+
+LBCMACH=$(echo ${LBCDIR%%:*}|tr '[:upper:]' '[:lower:]')
+DIRGET=${LBCDIR##*:}
+
+if [ "$LBCMACH" = "hendrix" ]; then  
+    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.a.tar ]]; then ftget ${DIRGET}/${GEOMM}$YYYY${MM}.1H.a.tar  FIC$YYYY${MM}.a.tar; fi 
+    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.b.tar ]]; then ftget ${DIRGET}/${GEOMM}$YYYY${MM}.1H.b.tar  FIC$YYYY${MM}.b.tar; fi 
+    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.c.tar ]]; then ftget ${DIRGET}/${GEOMM}$YYYY${MM}.1H.c.tar  FIC$YYYY${MM}.c.tar; fi 
+elif [ "$LBCMACH" = "belenos" ]; then  
+    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.a.tar ]]; then cp ${DIRGET}/${GEOMM}$YYYY${MM}.1H.a.tar  FIC$YYYY${MM}.a.tar; fi 
+    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.b.tar ]]; then cp ${DIRGET}/${GEOMM}$YYYY${MM}.1H.b.tar  FIC$YYYY${MM}.b.tar; fi 
+    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.c.tar ]]; then cp ${DIRGET}/${GEOMM}$YYYY${MM}.1H.c.tar  FIC$YYYY${MM}.c.tar; fi 
+else; 
+    echo "LBCDIR must be in the format of machine:/location/on/machine, with files named as ${GEOMM}$YYYY${MM}.1H.(a,b,c).tar. Invalid machine name provided, please try again. "   
+fi 
+
+
+for atar in FIC$YYYY${MM}.a.tar FIC$YYYY${MM}.b.tar FIC$YYYY${MM}.c.tar; do 
+for fil in `tar -tf $atar`; do 
+    if [[ ! -s $fil ]]; then 
+       tar -xf $atar
+       break 
+    fi 
+done 
+done 
+
+
+#MTOOL broadcast id=compute
+
+
+#MTOOL profile target=[this:cpunodes]
+#SBATCH --job-name=[this:jobname]
+#SBATCH -p normal256
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=16
+#SBATCH --cpus-per-task=8
+#SBATCH --time 04:00:00
+#SBATCH --exclusiv
+#SBATCH --mem=240Gb
+#SBATCH -o c927_climat.o%j
+
+#MTOOL end
+#MTOOL common join=compute
+
+
+# Load required modules and set environment variables
+ulimit -s unlimited
+module() { eval `/usr/bin/modulecmd bash $*`; }
+module purge ||:
+module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
+export MKL_CBWR=AUTO,STRICT
+export OMP_STACKSIZE=4G
+export KMP_STACKSIZE=4G
+export KMP_MONITOR_STACKSIZE=1G
+export EC_MPI_ATEXIT=0
+export EC_PROFILE_HEAP=0
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export DR_HOOK=0
+export DR_HOOK_IGNORE_SIGNALS=-1
+export DR_HOOK_SILENT=1
+export DR_HOOK_OPT=prof
+export MPL_MBX_SIZE=2048000000
+export KMP_AFFINITY="verbose,compact,granularity=fine"
+export KMP_BLOCKTIME=12
+export OMP_WAIT_POLICY=ACTIVE
+export EC_MEMINFO=0
+
+
+# Machine-depending namelist variables
+LOPT_SCALAR=.TRUE.
+MBX_SIZE=1024000000
+NCOMBFLEN=1800000
+MP_TYPE=2
+
+# Get this month and the next for copying clims  
+MONCT=$MM
+MONNXT=$(date --date="$(date +${YYYY}-${MM}-01) +1 month" +"%m")
+
+#=========================================================================
+#===== Preparation of execution
+#=========================================================================
+
+cd $FTDIR/[MNEMO] 
+
+#=== Copying and transforming Namelists
+cp $NAMSFX EXSEG1.nam
+cp $NAMARP namprovi
+cp $TOOLBOX_DIR/tools/xpnam . 
+
+cat >nambit<<'EOR' 
+&NAMRIP
+  CSTOP='t0',
+  TSTEP=60.,
+/
+&NAMRIP0
+/
+EOR
+
+xpnam -i --rmblock=NAMRIP0,NAMRIP namprovi
+xpnam -i --dfile=nambit namprovi  
+
+xpnam -i --rmblock=NAM_PREP_SURF_ATM EXSEG1.nam
+
+
+# Transform the namelist files by replacing placeholders with actual values
+sed \
+ -e "s/__NCOMBFLEN__/$NCOMBFLEN/" \
+ -e "s/__MP_TYPE__/$MP_TYPE/" \
+ -e "s/__LOPT_SCALAR__/$LOPT_SCALAR/" \
+ -e "s/__MBX_SIZE__/$MBX_SIZE/" \
+ -e "s/__NTASKS__/$SLURM_NTASKS/" \
+ -e "s/LELAM=.*/LELAM=${LELAM},/"
+
+namprovi > fort.4
+rm namprovi
+
+#=========================================================================
+#===== Execution of the interpolation
+#=========================================================================
+
+# Departure climatologies:
+cp ${SRCDIR}/clim_arpege.${GRIDdep}.m${MONCT} Const.Clim
+cp ${SRCDIR}/clim_arpege.${GRIDdep}.m${MONNXT} Const.Clim_next 
+
+# Arrival climatologies:
+cp ${CLIMDIR}/clim_arpege.${GRID}.m${MONCT} const.clim.${SUFF}
+cp ${CLIMDIR}/clim_arpege.${GRID}.m${MONNXT} const.clim.${SUFF}_next
+
+# Model Binary 
+cp $EXEARP arpege.exe
+
+for fil in `tar -tf FIC$YYYY${MM}.a.tar`; do  
+    #=== Link the input file
+    ln -sf $fil ICMSH${CNMEXP}INIT
+    ln -sf ICMSH${CNMEXP}INIT ICMSH${CNMEXP}+0000 
+    #=== Run the model
+    mpirun ./arpege.exe
+    codrep=$?
+    if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED'; exit 1; fi
+    stamp=`echo $fil| sed -e "s/RX//" `
+    mv PFFPOSDEUR+0000 RE${GRID}${GEOMM}LBC${stamp}
+done 
+
+#MTOOL common join=ftput
+
+# Saving the results in the silo #
+tar cf RE${GRID}${GEOMM}${YYYY}${MM}.tar RE${GRID}${GEOMM}LBC*
+ftput -o mkdir RE${GRID}${GEOMM}${YYYY}${MM}.tar /home/$(whoami)/LBC/[MNEMO]/RE${GRID}${GEOMM}${YYYY}${MM}.tar
+
+ls -l
+
+##################
+# relance
+lrelan [MNEMO] [DATE]
+
+#MTOOL step id=ftget target=[this:frontend]
+#MTOOL step id=compute target=[this:cpunodes]
+#MTOOL step id=ftput target=[this:frontend]
+
+EOJ
+
+cd [DIRREL]
+mtool_filter.pl $JOB
