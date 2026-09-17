@@ -15,7 +15,7 @@ EXEARP=$pack/MASTERODB
 #=== Geometry
 GRID=NFR2.5
 GRIDl=NFR2.5l60
-GRIDdep=tl399r
+GRIDdep=EUC12
 
 #=== Dates for surface and atmosphere restarts
 NYEAR=2019

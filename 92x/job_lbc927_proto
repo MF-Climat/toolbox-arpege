@@ -65,20 +65,27 @@ export NPROC=$(($NN*$NNP))
 LBCMACH=$(echo ${LBCDIR%%:*}|tr '[:upper:]' '[:lower:]')
 DIRGET=${LBCDIR##*:}
 
-if [ "$LBCMACH" = "hendrix" ]; then  
-    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.a.tar ]]; then ftget ${DIRGET}/${GEOMM}$YYYY${MM}.1H.a.tar  FIC$YYYY${MM}.a.tar; fi 
-    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.b.tar ]]; then ftget ${DIRGET}/${GEOMM}$YYYY${MM}.1H.b.tar  FIC$YYYY${MM}.b.tar; fi 
-    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.c.tar ]]; then ftget ${DIRGET}/${GEOMM}$YYYY${MM}.1H.c.tar  FIC$YYYY${MM}.c.tar; fi 
+if [ "$LBCMACH" = "hendrix" ]; then 
+ftp -i hendrix <<eorr
+cd $DIRGET
+ls *$YYYY${MM}*tar filget
+exit
+eorr
+    for fil in $( awk '{print $NF}' filget ); do 
+        if [[ ! -s ${FTDIR}/[MNEMO]/${fil} ]]; then ftget ${DIRGET}/${fil}  $fil; fi 
+    done
 elif [ "$LBCMACH" = "belenos" ]; then  
-    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.a.tar ]]; then cp ${DIRGET}/${GEOMM}$YYYY${MM}.1H.a.tar  FIC$YYYY${MM}.a.tar; fi 
-    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.b.tar ]]; then cp ${DIRGET}/${GEOMM}$YYYY${MM}.1H.b.tar  FIC$YYYY${MM}.b.tar; fi 
-    if [[ ! -s ${FTDIR}/[MNEMO]/FIC$YYYY${MM}.c.tar ]]; then cp ${DIRGET}/${GEOMM}$YYYY${MM}.1H.c.tar  FIC$YYYY${MM}.c.tar; fi 
+    ls $DIRGET/*$YYYY${MM}*tar>filget 
+    sed -i -e "s|^.*/||" filget
+    for fil in `cat filget`; do 
+        if [[ ! -s ${FTDIR}/[MNEMO]/${fil} ]]; then cp ${DIRGET}/${fil}  $fil; fi
+    done
 else; 
-    echo "LBCDIR must be in the format of machine:/location/on/machine, with files named as ${GEOMM}$YYYY${MM}.1H.(a,b,c).tar. Invalid machine name provided, please try again. "   
+    echo "LBCDIR must be in the format of machine:/location/on/machine, with files named following the pattern *$YYYY${MM}*tar. Invalid machine name provided, please try again. "   
 fi 
 
 
-for atar in FIC$YYYY${MM}.a.tar FIC$YYYY${MM}.b.tar FIC$YYYY${MM}.c.tar; do 
+for atar in `ls *$YYYY${MM}*tar`; do 
 for fil in `tar -tf $atar`; do 
     if [[ ! -s $fil ]]; then 
        tar -xf $atar
@@ -172,8 +179,7 @@ sed \
  -e "s/__LOPT_SCALAR__/$LOPT_SCALAR/" \
  -e "s/__MBX_SIZE__/$MBX_SIZE/" \
  -e "s/__NTASKS__/$SLURM_NTASKS/" \
- -e "s/LELAM=.*/LELAM=${LELAM},/"
-
+ -e "s/LELAM=.*/LELAM=${LELAM},/" \
 namprovi > fort.4
 rm namprovi
 
@@ -192,7 +198,9 @@ cp ${CLIMDIR}/clim_arpege.${GRID}.m${MONNXT} const.clim.${SUFF}_next
 # Model Binary 
 cp $EXEARP arpege.exe
 
-for fil in `tar -tf FIC$YYYY${MM}.a.tar`; do  
+
+for atar in `ls *$YYYY${MM}*tar`; do 
+for fil in `tar -tf $atar`; do 
     #=== Link the input file
     ln -sf $fil ICMSH${CNMEXP}INIT
     ln -sf ICMSH${CNMEXP}INIT ICMSH${CNMEXP}+0000 
@@ -202,6 +210,7 @@ for fil in `tar -tf FIC$YYYY${MM}.a.tar`; do
     if [ $codrep -ne 0 ]; then echo '>>>>>>>> FAILED'; exit 1; fi
     stamp=`echo $fil| sed -e "s/RX//" `
     mv PFFPOSDEUR+0000 RE${GRID}${GEOMM}LBC${stamp}
+done 
 done 
 
 #MTOOL common join=ftput

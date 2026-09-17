@@ -66,8 +66,7 @@ NAMARP=${NAMARPc927:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_cl
 SRCDIR=${SRCDIR:-/scratch/climat/daac-dev/data/927N}
 # Target climatologies - to build it, check c923 - :
 CLIMDIR=${CLIMDIR:-/scratch/climat/daac-dev/data/927N}
-# Restart on departure grid 
-INITFIL=${INITFIL:-analyse.20161002r0}
+
 # Option if interpolating LBCs from regional to regional 
 LELAM=${LELAM:-.FALSE.}
 
@@ -130,7 +129,6 @@ VARI export NAMSFX=${NAMSFXc927}
 VARI export NAMARP=${NAMARPc927}
 VARI export SRCDIR=${SRCDIR}
 VARI export CLIMDIR=${CLIMDIR}
-VARI export INITFIL=${INITFIL}
 VARI export CNMEXP=${CNMEXP}
 VARI export SUFF=${SUFF}
 VARI export SAVEDIR=${SAVEDIR}

@@ -213,7 +213,8 @@ ln -s $PGD PGD.fa
 
 #=== Copying ts clim 
 # Arrival climatologies:
-#cp ${CLIMDIR}/clim_arpege.${GRID}.$(printf "%02.0f" $NMONTH) const.clim
+
+cp ${CLIMDIR}/clim_arpege.${GRID}.$(printf "%02.0f" $NMONTH) const.clim
 
 echo " copie et execution du prep "
 ln -s $EXEPREP prep.exe

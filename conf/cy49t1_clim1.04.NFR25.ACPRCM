@@ -1,3 +1,11 @@
+#=== Directory containing clims for the source grid 
+SRCDIR=/scratch/work/haradercoustaue/DATA/ERA5/clim
+
+#=== Infos for making LBCs and CIs 
+LBCDIR=hendrix:/home/haradercoustaue/DATA/ERA5/restart
+GEOMM=tl399l137R
+LELAM=.FALSE.
+
 #=== Binaries
 pack=/home/gmgec/mrgo/lenobler/packs/arome_v7.4.IMPIIFC2302DP.y/bin
 EXEPGD=$pack/PGD
@@ -7,11 +15,14 @@ EXEARP=$pack/MASTERODB
 #=== Geometry
 GRID=NFR2.5
 GRIDl=NFR2.5l60
+GRIDdep=tl399r
 
 #=== Dates for surface and atmosphere restarts
 NYEAR=2019
 NMONTH=2
 NDAY=15
+ENDYEAR=2022
+ENDMONTH=2
 
 #=== Output directory: define SAVEDIR if wanted. Default : $workdir. Prefix, completed by each different job, e.g. : $SAVEDIR/pgd-prep/$expname
 SAVEDIR=$workdir/arome/tests/${GRID}

@@ -172,7 +172,7 @@ rm namprovi
 
 #=== Get the input files
 # Initial conditions:
-cp ${SRCDIR}/analyse.20161002r0 ICMSH${CNMEXP}INIT
+cp ${SRCDIR}/${INITFIL} ICMSH${CNMEXP}INIT
 
 # Initial conditions:
 
