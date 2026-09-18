@@ -1,8 +1,11 @@
 #=== Location of namelists for toolbox 
 TOOLBOX_DIR=/home/gmgec/mrgi/voldoire/SAVE/arpege/toolbox-arpege
+grid=tl127
+gridl=tl127l91r
 
 #=== Binaries
 pack=/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin
+EXEARP=$pack/MASTERODB
 EXEPGD=$pack/PGD
 EXEPREP=$pack/PREP
 EXEARP=$pack/MASTERODB

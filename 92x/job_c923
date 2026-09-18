@@ -15,7 +15,7 @@
 
 # Load required modules and set environment variables
 ulimit -s unlimited
-module purge ||:
+module purge
 module load intel/oneapi/2023.2 compiler/2023.2.0 mkl/2023.2.0 mpi/2021.10.0 gcc/14.1.0 2>/dev/null
 export MKL_CBWR=AUTO,STRICT
 export OMP_STACKSIZE=4G
@@ -37,7 +37,7 @@ export EC_MEMINFO=0
 while getopts "c:h?" flags ; do
   case $flags in
     c) CONFIGFILE=${OPTARG};;
-    h|?) echo -e "job_c923_cy49 takes one optional kwarg :\n -c config file "
+    h|?) echo -e "job_c923_cy49 takes one optional kwarg :\n -c config file \n -h show this help"
          exit 0;;
     \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
         exit 1;;

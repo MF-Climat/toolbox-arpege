@@ -76,7 +76,7 @@ TRIP_INITFILE=${TRIP_INITFILE:-/scratch/climat/CEDRE/restart/riv/riv05/v7/rst.tr
 CLIMDIR=${CLIMDIR:-/scratch/climat/daac-dev/data/927N}
 
 #=== Output directory
-SAVEDIR=${SAVEDIR:-$workdir/surfex/pgdprep/$expname}
+SAVEDIR=${SAVEDIR:-$workdir} ; SAVEDIR=$SAVEDIR/pgd-prep/$expname
 
 #=== Constants files and directory sources
 ECODIR=${ECODIR:-/scratch/climat/CMIP6/data/sfx}
@@ -227,7 +227,7 @@ cp ${CLIMDIR}/clim_arpege.${GRID}.$(printf "%02.0f" $NMONTH) const.clim
 echo " copie et execution du prep "
 ln -s $EXEPREP prep.exe
 if [[ $LTRIP -ne 0 ]] ; then
-   mpirun -np 1 prep.exe : -np 1 trip_prep.exe
+   mpirun -np 1 ./prep.exe : -np 1 ./trip_prep.exe
 else
    ./prep.exe
 fi
