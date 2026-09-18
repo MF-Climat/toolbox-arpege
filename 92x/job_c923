@@ -71,7 +71,7 @@ TOOLBOX_DIR=${TOOLBOX_DIR:-$(pwd)/..}
 EXEARP=${EXEARP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/MASTERODB}
 
 #=== Geometry and version
-GRID=${GRID:-tl127r}
+GRID=${GRID:-tl127}
 GRIDl=${GRIDl:-tl127l91r}
 #NDATX=360 # What for ? - might not be needed -
 #NDATY=180 # What for ? - might not be needed -
