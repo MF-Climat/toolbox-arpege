@@ -64,20 +64,20 @@ set -vx
 #===== Default Configuration
 #=========================================================================
 #
-# assuming the job has been lauch from the toolbox-arpege/pgd-prep directory
-TOOLBOX_DIR=$(pwd)/..
+# Assuming the job has been lauched from the toolbox-arpege/xx directory
+TOOLBOX_DIR=${TOOLBOX_DIR:-$(pwd)/..}
 #
 #=== Binaries
 EXEARP=${EXEARP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/MASTERODB}
 
 #=== Geometry and version
-GRID=${GRID:-tl127r}
+GRID=${GRID:-tl127}
 GRIDl=${GRIDl:-tl127l91r}
 #NDATX=360 # What for ? - might not be needed -
 #NDATY=180 # What for ? - might not be needed -
 
 #=== Namelists
-NAMSFX=${NAMSFXc923:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}.c923.cy49t1_clim1.03}
+NAMSFX=${NAMSFXc923:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}r.c923.cy49t1_clim1.03}
 NAMLIN=${NAMLIN:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c923.cy49t1_clim1.03.lin}
 NAMQUAD=${NAMQUAD:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c923.cy49t1_clim1.03.quad}
 

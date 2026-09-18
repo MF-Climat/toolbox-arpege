@@ -1,10 +1,10 @@
 #=== Directory containing clims for the source grid 
-SRCDIR=/scratch/work/haradercoustaue/DATA/ERA5/clim
+SRCDIR=/scratch/work/haradercoustaue/DATA/EUC12-CMIP6-SSP370-CNRMESM21-r1-v2AROM/clim
 
 #=== Infos for making LBCs and CIs 
-LBCDIR=hendrix:/home/haradercoustaue/DATA/ERA5/restart
-GEOMM=tl399l137R
-LELAM=.FALSE.
+LBCDIR=hendrix:/home/nabat/ALADIN/EUC12-CMIP6-SSP370-CNRMESM21-r1-v2AROM/atm/restart
+GEOMM=EUC12
+LELAM=.TRUE.
 
 #=== Binaries
 pack=/home/gmgec/mrgo/lenobler/packs/arome_v7.4.IMPIIFC2302DP.y/bin
@@ -15,7 +15,7 @@ EXEARP=$pack/MASTERODB
 #=== Geometry
 GRID=NFR2.5
 GRIDl=NFR2.5l60
-GRIDdep=tl399r
+GRIDdep=EUC12
 
 #=== Dates for surface and atmosphere restarts
 NYEAR=2019

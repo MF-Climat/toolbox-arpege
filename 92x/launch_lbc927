@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# Script for generation of RESTART files for ARPEGE-Climat v7.
+# Interpolation of Analysis or Forecast files towards the target horizontal and vertical grid.
+# Configuration 927.
+# sbatch <script-name> -c <config-file> (optional)
+# 03/2026 : Tested for TL49, TL127, TC127, TCO127
+
+while getopts "c:h?" flags ; do
+  case $flags in
+    c) CONFIGFILE=${OPTARG};;
+    h|?) echo -e "job_c927_cy49 takes one optional kwarg :\n -c config file "
+         exit 0;;
+    \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
+        exit 1;;
+  esac
+done
+
+shift $(($OPTIND-1));
+
+if [ $# -ne 0 ]; then
+  echo "Invalid argument(s) "$@
+  exit 1
+fi
+
+
+set -evx
+
+expname=cy49t1_clim1.03.tl127r
+if [ -s "$CONFIGFILE" ] ; then
+  CONFIGFILE=$( realpath $CONFIGFILE )
+  expname=$(basename $CONFIGFILE)
+  source $CONFIGFILE
+fi
+
+#=========================================================================
+#===== Default Configuration
+#=========================================================================
+#
+# assuming the job has been lauch from the toolbox-arpege/pgd-prep directory
+TOOLBOX_DIR=$(pwd)/..
+#
+#=== Binaries
+EXEARP=${EXEARP:-/scratch/climat/packs/CY49T1_clim1.03.IMPIIFC2302DP.y/bin/MASTERODB}
+
+#== Get dates
+# This is the regional script for making multiple LBCs (not a single initial condition)
+# thus there is no NDAY option 
+NYEAR=${NYEAR:-2016}
+NMONTH=${NMONTH:-10}
+ENDYEAR=${ENDYEAR:-2016}
+ENDMONTH=${ENDMONTH:-11}
+
+#=== Geometry and version
+GRID=${GRID:-tl127}
+GRIDl=${GRIDl:-tl127l91r}
+# Departure grid 
+GRIDdep=${GRIDdep:-tl1198.01}
+
+#=== Namelists
+NAMSFX=${NAMSFXc927:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}r.c927.cy49t1_clim1.03}
+NAMARP=${NAMARPc927:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_clim1.03}
+
+#=== Restarts
+# Initial conditions and climatologies :
+SRCDIR=${SRCDIR:-/scratch/climat/daac-dev/data/927N}
+# Target climatologies - to build it, check c923 - :
+CLIMDIR=${CLIMDIR:-/scratch/climat/daac-dev/data/927N}
+
+# Option if interpolating LBCs from regional to regional 
+LELAM=${LELAM:-.FALSE.}
+
+#=== Common code filenames for CIs and LBCs 
+CNMEXP=${CNMEXP:-ARPE}
+SUFF=${SUFF:-000}
+
+#=== Retrieving LBC data from hendrix 
+LBCDIR=${LBCDIR:-hendrix:/home/haradercoustaue/DATA/ERA5/restart}
+GEOMM=${GEOMM:-tl399l137R}
+
+#=== Output directory
+SAVEDIR=${SAVEDIR:-$workdir} ; SAVEDIR=$SAVEDIR/c927/$expname
+
+#=========================================================================
+#===== End of main configuration elements
+#=========================================================================
+
+
+if [ "${GRID:0:2}" = "tl" ]; then  
+    echo "Stop trying to make LBCs for your global model. Use job_c927 for CIs instead."; 
+    exit 1
+else  
+    echo "First grid check ok. Reminder : this is an RCM script, please don't try it with global grids"; 
+fi
+
+
+mkdir -p $HOME/relances/lbc_${expname} || : 
+cd $HOME/relances/lbc_${expname}
+
+#=== Create his file in relan dir (DIRREL) 
+DACT=$(date --date="$(date +${NYEAR}-${NMONTH}-01) -1 month" +"%Y%m")
+DATF=$(date --date="$(date +${ENDYEAR}-${ENDMONTH}-01)" +"%Y%m")
+
+cat>$HOME/relances/lbc_${expname}/lbc_${expname}_his<<EOR
+MNMO lbc_$expname
+MODA aaaamm
+DATF ${DATF}
+DACT ${DACT}
+DAFC ${DACT}
+EXPE Options are to be found in INCL filename, including PROO filename.
+INCL $HOME/relances/lbc_${expname}/lbc_${expname}_incl
+EXPE
+INFA
+INFD
+EOR
+
+# Create include file in relan dir 
+cat>$HOME/relances/lbc_${expname}/lbc_${expname}_incl<<EOR 
+VARI export TOOLBOX_DIR=${TOOLBOX_DIR}
+VARI export EXEARP=${EXEARP}
+VARI export NYEAR=${NYEAR}
+VARI export NMONTH=${NMONTH}
+VARI export ENDYEAR=${ENDYEAR}
+VARI export ENDMONTH=${ENDMONTH}
+VARI export GRID=${GRID}
+VARI export GRIDl=${GRIDl}
+VARI export GRIDdep=${GRIDdep}
+VARI export NAMSFX=${NAMSFXc927}
+VARI export NAMARP=${NAMARPc927}
+VARI export SRCDIR=${SRCDIR}
+VARI export CLIMDIR=${CLIMDIR}
+VARI export CNMEXP=${CNMEXP}
+VARI export SUFF=${SUFF}
+VARI export SAVEDIR=${SAVEDIR}
+VARI export LBCDIR=${LBCDIR}
+VARI export GEOMM=${GEOMM}
+VARI export LELAM=${LELAM}
+PROO $HOME/relances/lbc_${expname}/job_lbc927
+EOR
+
+cp $TOOLBOX_DIR/92x/job_lbc927_proto $HOME/relances/lbc_${expname}/job_lbc927
+
+relan lbc_${expname}
