@@ -8,6 +8,8 @@
 #               ==============================================================================
 #               -p  0 -> no pgd computed
 #                   1 -> pgd computed (default)
+#               -c  config file 
+#               -h/-? print help  
 #               ==============================================================================
 #
 #
@@ -20,16 +22,22 @@
 #
 set -x
 #
+# Default value for LPGD, overwritten if passed by argument  
 LPGD=1
-OPTIND='1'
-while getopts :p: V ; do
-  case $V in 
-    (p) LPGD=${OPTARG} ;;
+
+while getopts "p:c:h?" flags ; do
+  case $flags in 
+    p) LPGD=${OPTARG};;
+    c) CONFIGFILE=${OPTARG};;
+    h|?) echo -e "job_pgd_prep takes two optional kwargs :\n -c config file \n -p option to create pgd\ 
+               \n -h show this help "
+         exit 0;;
+    \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
+        exit 1;; 
   esac
 done
-#
-shift $(($OPTIND-1));
-CONFIGFILE=$1
+
+# Default experiment name, overwritten if passed by argument  
 expname=cy49t1_clim1.03_tl127r
 if [ -s "$CONFIGFILE" ] ; then
   source $CONFIGFILE
@@ -93,7 +101,7 @@ if [ ! -r $SAVEDIR ]; then
   mkdir -p $SAVEDIR
 fi
 
-[ $LPGD -eq 1 ] && rm -f $SAVEDIR/*
+[ $LPGD -eq 1 ] && rm -f $SAVEDIR/PGD.fa $SAVEDIR/PREP.fa
 
 #=== Environement
 ulimit -s unlimited
