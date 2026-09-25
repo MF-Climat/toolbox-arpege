@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# Script for generation of geometry files for ARO and ALD based on ARPEGE-Climat v7.
+# Execution of domain maker and generation of appropriate namelists. Defaults to 
+# AROME NFR2.5 domain  
+# <script-name> -c <config-file> (required)
+# 09/2026 :
+
+
+module purge 
+module load python/3.10.12 intel/2018.5.274_mkl_nightly_2019u2 gcc/14.1.0
+
+while getopts "c:h?" flags ; do
+  case $flags in
+    c) CONFIGFILE=${OPTARG};;
+    h|?) echo -e "new_domain takes one required kwarg :\n -c config file "
+         exit 0;;
+    \?) echo "Invalid argument "${flags[@]:$OPTIND:1} 
+        exit 1;;
+  esac
+done
+
+shift $(($OPTIND-1));
+
+if [ $# -ne 0 ]; then
+  echo "Invalid argument(s) "$@
+  exit 1
+fi
+
+
+set -evx
+
+expname=cy49t1_clim1.03.tl127r
+if [ -s "$CONFIGFILE" ] ; then
+  CONFIGFILE=$( realpath $CONFIGFILE )
+  expname=$(basename $CONFIGFILE)
+  source $CONFIGFILE
+else 
+  echo "new_domain : missing required argument -c [CONFIGFILE]"
+  exit 1
+fi
+
+#=========================================================================
+#===== Default Configuration
+#=========================================================================
+#
+# assuming the job has been lauch from the toolbox-arpege/pgd-prep directory
+TOOLBOX_DIR=$(pwd)/..
+#
+
+# Get epygram evironment 
+EPYV=${EPYV:-/scratch/climat/APPS/venvs/epenv_py3.10/bin/activate}
+
+
+# Get requested geometry 
+DX=${DX:-2500}
+LONCEN=${LONCEN:-2.3358}
+LATCEN=${LATCEN:-48.8511}
+NIMAX=${NIMAX:-245}
+NJMAX=${NJMAX:-245}
+NDZON=${NDZON:-8}
+# Single letter abbreviated projection : 'L':'lambert', 'M':'mercator', 'PS':'polar_stereographic'
+PROJ=${PROJ:-L}
+
+#== Get dates
+# This is the regional script for making multiple LBCs (not a single initial condition)
+# thus there is no NDAY option 
+NYEAR=${NYEAR:-2016}
+NMONTH=${NMONTH:-10}
+ENDYEAR=${ENDYEAR:-2016}
+ENDMONTH=${ENDMONTH:-11}
+
+#=== Geometry and version
+GRID=${GRID:-tl127}
+# !! Verti levels need to be included later  
+GRIDl=${GRIDl:-tl127l91r}
+
+#=== Namelists
+# this is going to be kind of annoying to modif all the things 
+# do I add a marker to these files to show that they are temporary ? 
+NAMSFX=${NAMSFXc927:-${TOOLBOX_DIR}/namelist/sfx/nam.sfx.${GRID}r.c927.cy49t1_clim1.03}
+NAMARP=${NAMARPc927:-${TOOLBOX_DIR}/namelist/atm/nam.atm.${GRIDl}.c927.cy49t1_clim1.03}
+
+
+#=== Output directory
+SAVEDIR=${SAVEDIR:-$workdir} ; SAVEDIR=$SAVEDIR/domain/$expname
+
+#=========================================================================
+#===== End of main configuration elements
+#=========================================================================
+
+source $EPYV
+set -evx 
+
+if [ ! -r $SAVEDIR ]; then 
+  mkdir -p $SAVEDIR
+fi 
+
+cd $SAVEDIR
+rm domain_maker.out.png namel_c923.geoblocks namel_e927.geoblocks namel_buildpgd.geoblocks namel_c923_orography.geoblocks new_domain.namelists_blocks ||:
+
+
+python<<eorr
+import epygram
+from epygram.geometries import domain_making
+from epygram.geometries.domain_making.build import build_geometry
+from epygram.geometries.domain_making.output import plot_geometry,summary,write_geometry_as_namelists
+from epygram.config import default_graphical_output
+geometry = build_geometry(${LONCEN},${LATCEN},${NIMAX},${NJMAX},${DX},Iwidth=${NDZON},tilting=False,maximize_CI_in_E=False,interactive=False)
+out='domain_maker.out.'+default_graphical_output
+projections= {'L':'lambert', 'M':'mercator', 'PS':'polar_stereographic'}
+sel='${PROJ}'.strip().upper()
+plot_geometry(geometry, lonlat_included=None, out=out, departements=False,departments=False, background=True,plotlib='cartopy',force_projection=projections[sel])
+print(summary(geometry))
+write_geometry_as_namelists(geometry,allinone=True,truncation='linear', orography_subtruncation='quadratic')
+eorr
+
